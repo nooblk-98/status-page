@@ -355,6 +355,8 @@ body[data-theme="light"] .badge {
 
 .search-wrap {
   display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .search-input {
@@ -375,6 +377,63 @@ body[data-theme="light"] .badge {
 
 body[data-theme="light"] .search-input {
   background: rgba(255, 255, 255, 0.85);
+}
+
+.search-clear {
+  border: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+body[data-theme="light"] .search-clear {
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.search-suggestions {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.6);
+  overflow: hidden;
+  display: none;
+}
+
+body[data-theme="light"] .search-suggestions {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.search-suggestions.is-open {
+  display: block;
+}
+
+.suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.suggestion-item .hint {
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .recent {

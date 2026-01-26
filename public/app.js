@@ -9,6 +9,8 @@ const liveText = document.getElementById("liveText");
 const rangeButtons = document.getElementById("rangeButtons");
 const themeToggle = document.getElementById("themeToggle");
 const searchInput = document.getElementById("searchInput");
+const searchClear = document.getElementById("searchClear");
+const searchSuggestions = document.getElementById("searchSuggestions");
 
 let sites = [];
 let refreshTimer = null;
@@ -338,6 +340,62 @@ function setActiveRange(range) {
   });
 }
 
+function scoreMatch(text, query) {
+  const index = text.indexOf(query);
+  if (index === -1) return null;
+  return index === 0 ? 0 : index + 2;
+}
+
+function buildSuggestions(query) {
+  if (!searchSuggestions) return;
+  const trimmed = query.trim().toLowerCase();
+  if (!trimmed) {
+    searchSuggestions.classList.remove("is-open");
+    searchSuggestions.innerHTML = "";
+    return;
+  }
+
+  const matches = sites
+    .map((site) => {
+      const name = site.name.toLowerCase();
+      const url = site.url.toLowerCase();
+      const nameScore = scoreMatch(name, trimmed);
+      const urlScore = scoreMatch(url, trimmed);
+      if (nameScore === null && urlScore === null) return null;
+      return {
+        site,
+        score: Math.min(nameScore ?? 99, urlScore ?? 99),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 6);
+
+  if (!matches.length) {
+    searchSuggestions.classList.remove("is-open");
+    searchSuggestions.innerHTML = "";
+    return;
+  }
+
+  searchSuggestions.classList.add("is-open");
+  searchSuggestions.innerHTML = "";
+  matches.forEach((match) => {
+    const item = document.createElement("div");
+    item.className = "suggestion-item";
+    item.innerHTML = `
+      <span>${match.site.name}</span>
+      <span class="hint">${match.site.url}</span>
+    `;
+    item.addEventListener("click", () => {
+      searchQuery = match.site.name;
+      if (searchInput) searchInput.value = match.site.name;
+      searchSuggestions.classList.remove("is-open");
+      refreshAll();
+    });
+    searchSuggestions.appendChild(item);
+  });
+}
+
 async function refreshAll() {
   if (!sites.length) return;
 
@@ -368,6 +426,15 @@ async function refreshAll() {
   });
 
   filtered.sort((a, b) => {
+    if (query) {
+      const aName = a.site.name.toLowerCase();
+      const bName = b.site.name.toLowerCase();
+      const aUrl = a.site.url.toLowerCase();
+      const bUrl = b.site.url.toLowerCase();
+      const aScore = Math.min(scoreMatch(aName, query) ?? 99, scoreMatch(aUrl, query) ?? 99);
+      const bScore = Math.min(scoreMatch(bName, query) ?? 99, scoreMatch(bUrl, query) ?? 99);
+      if (aScore !== bScore) return aScore - bScore;
+    }
     const aDown = a.latest && !a.latest.ok;
     const bDown = b.latest && !b.latest.ok;
     if (aDown !== bDown) return aDown ? -1 : 1;
@@ -454,6 +521,19 @@ window.addEventListener("load", async () => {
 if (searchInput) {
   searchInput.addEventListener("input", (event) => {
     searchQuery = event.target.value || "";
+    buildSuggestions(searchQuery);
+    refreshAll();
+  });
+}
+
+if (searchClear) {
+  searchClear.addEventListener("click", () => {
+    searchQuery = "";
+    if (searchInput) searchInput.value = "";
+    if (searchSuggestions) {
+      searchSuggestions.classList.remove("is-open");
+      searchSuggestions.innerHTML = "";
+    }
     refreshAll();
   });
 }
