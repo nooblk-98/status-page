@@ -1,11 +1,11 @@
-# Simple static site container
-FROM nginx:1.25-alpine
+FROM node:20-alpine
 
-# Remove default content
-RUN rm -rf /usr/share/nginx/html/*
+WORKDIR /app
 
-# Copy site assets
-COPY ./ /usr/share/nginx/html/
+COPY package.json package-lock.json* ./
+RUN npm install --production
 
-# Expose default http port
-EXPOSE 80
+COPY . .
+
+EXPOSE 3000
+CMD ["npm", "start"]

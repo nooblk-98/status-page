@@ -16,7 +16,7 @@
       <div>
         <p class="eyebrow">Status Console</p>
         <h1>Uptime you can trust</h1>
-        <p class="sub">Track live pings and store 30 days of uptime history in your browser.</p>
+        <p class="sub">Live checks are stored in SQLite for 30 days of history.</p>
       </div>
       <div class="badge" id="liveBadge">
         <span class="dot" id="liveDot"></span>
@@ -26,36 +26,18 @@
 
     <section class="card controls">
       <div class="field">
-        <label for="endpoint">Endpoint URL</label>
-        <input id="endpoint" type="url" placeholder="https://example.com/health" />
+        <label for="siteSelect">Monitored site</label>
+        <select id="siteSelect"></select>
       </div>
       <div class="field">
-        <label for="interval">Ping interval</label>
-        <select id="interval">
-          <option value="30">Every 30 seconds</option>
-          <option value="60" selected>Every 60 seconds</option>
-          <option value="120">Every 2 minutes</option>
-          <option value="300">Every 5 minutes</option>
-        </select>
+        <label>History window</label>
+        <div class="pill">Last 30 days</div>
       </div>
-      <div class="field compact">
-        <label>Options</label>
-        <div class="options">
-          <label class="toggle">
-            <input id="useProxy" type="checkbox" />
-            <span>Use CORS proxy</span>
-          </label>
-          <label class="toggle">
-            <input id="autoStart" type="checkbox" />
-            <span>Auto-start on load</span>
-          </label>
-        </div>
+      <div class="field">
+        <label>Refresh rate</label>
+        <div class="pill">Every 15 seconds</div>
       </div>
-      <div class="actions">
-        <button class="primary" id="startBtn">Start monitoring</button>
-        <button class="ghost" id="stopBtn" disabled>Stop</button>
-      </div>
-      <p class="hint">Tip: If your endpoint blocks browser requests, enable the CORS proxy option.</p>
+      <p class="hint">Edit `config.js` to add or update monitored sites.</p>
     </section>
 
     <section class="grid">

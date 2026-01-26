@@ -1,0 +1,14 @@
+{
+  "name": "status-page",
+  "version": "1.0.0",
+  "description": "Simple status page with SQLite history",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  }
+}
