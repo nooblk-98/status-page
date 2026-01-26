@@ -154,7 +154,7 @@ function buildTimeline(downtimeWindows, checks, range, site) {
   const rangeStart = rangeEnd - rangeMs;
   const segments = rangeSegments(range);
   const bucketMs = rangeMs / segments;
-  const buckets = Array.from({ length: segments }, () => ({ ok: 0, total: 0 }));
+  const buckets = Array.from({ length: segments }, () => ({ ok: 0, total: 0, down: 0 }));
 
   // Use raw checks to compute per-segment health.
   // This keeps the original up/down bars visible behind downtime windows.
@@ -164,20 +164,20 @@ function buildTimeline(downtimeWindows, checks, range, site) {
     const bucket = buckets[segments - offset - 1];
     bucket.total += 1;
     if (entry.ok) bucket.ok += 1;
+    else bucket.down += 1;
   });
 
   buckets.forEach((bucket) => {
-    const ratio = bucket.total ? bucket.ok / bucket.total : null;
     const seg = document.createElement("div");
     seg.className = "uptime-segment";
-    if (ratio === null) {
+    if (bucket.total === 0) {
       seg.classList.add("idle");
-    } else if (ratio > 0.98) {
+    } else if (bucket.down === 0) {
       seg.classList.add("good");
-    } else if (ratio > 0.9) {
-      seg.classList.add("warn");
-    } else {
+    } else if (bucket.down === bucket.total && bucket.total >= 2) {
       seg.classList.add("bad");
+    } else {
+      seg.classList.add("warn");
     }
     bar.appendChild(seg);
   });
