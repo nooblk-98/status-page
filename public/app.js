@@ -290,14 +290,9 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
 
   const timeline = buildTimeline(checks, range, site);
 
-  const legend = document.createElement("div");
-  legend.className = "legend";
-  legend.innerHTML = "<span class=\"good\"></span> Healthy <span class=\"warn\"></span> Degraded <span class=\"bad\"></span> Down";
-
   card.appendChild(header);
   card.appendChild(meta);
   card.appendChild(timeline);
-  card.appendChild(legend);
   card.appendChild(recentPanel);
 
   return card;
