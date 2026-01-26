@@ -4,8 +4,8 @@ services:
   status-page:
     build: .
     container_name: status-page
-    ports:
-      - "8080:3000"
+    # ports:
+    #   - "8080:3000"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
