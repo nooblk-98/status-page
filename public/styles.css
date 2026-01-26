@@ -253,6 +253,7 @@ body {
 .uptime-labels {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
+  column-gap: 12px;
   font-size: 0.7rem;
   color: var(--muted);
   text-transform: uppercase;
@@ -264,6 +265,10 @@ body {
   color: var(--text);
   font-weight: 600;
   letter-spacing: 0.16em;
+}
+
+.uptime-labels span:last-child {
+  justify-self: end;
 }
 
 .legend {
