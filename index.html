@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Status Page – 30-Day Uptime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Status Console</p>
+        <h1>Uptime you can trust</h1>
+        <p class="sub">Track live pings and store 30 days of uptime history in your browser.</p>
+      </div>
+      <div class="badge" id="liveBadge">
+        <span class="dot" id="liveDot"></span>
+        <span id="liveText">Idle</span>
+      </div>
+    </header>
+
+    <section class="card controls">
+      <div class="field">
+        <label for="endpoint">Endpoint URL</label>
+        <input id="endpoint" type="url" placeholder="https://example.com/health" />
+      </div>
+      <div class="field">
+        <label for="interval">Ping interval</label>
+        <select id="interval">
+          <option value="30">Every 30 seconds</option>
+          <option value="60" selected>Every 60 seconds</option>
+          <option value="120">Every 2 minutes</option>
+          <option value="300">Every 5 minutes</option>
+        </select>
+      </div>
+      <div class="field compact">
+        <label>Options</label>
+        <div class="options">
+          <label class="toggle">
+            <input id="useProxy" type="checkbox" />
+            <span>Use CORS proxy</span>
+          </label>
+          <label class="toggle">
+            <input id="autoStart" type="checkbox" />
+            <span>Auto-start on load</span>
+          </label>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="startBtn">Start monitoring</button>
+        <button class="ghost" id="stopBtn" disabled>Stop</button>
+      </div>
+      <p class="hint">Tip: If your endpoint blocks browser requests, enable the CORS proxy option.</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Live status</h2>
+        <div class="status-row">
+          <div class="status-pill" id="statusPill">Waiting</div>
+          <div class="latency"><span id="latency">--</span> ms</div>
+        </div>
+        <div class="meta">
+          <div>
+            <span class="label">Last checked</span>
+            <span class="value" id="lastChecked">—</span>
+          </div>
+          <div>
+            <span class="label">Uptime (30 days)</span>
+            <span class="value" id="uptimePercent">—</span>
+          </div>
+          <div>
+            <span class="label">Checks stored</span>
+            <span class="value" id="checkCount">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>30-day snapshot</h2>
+        <div class="timeline" id="timeline"></div>
+        <div class="legend">
+          <span class="good"></span> Healthy
+          <span class="warn"></span> Degraded
+          <span class="bad"></span> Down
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recent checks</h2>
+      <div class="table" id="recentTable"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
