@@ -490,7 +490,10 @@ function startRefresh() {
 function setTheme(theme) {
   document.body.setAttribute("data-theme", theme);
   if (themeToggle) {
-    themeToggle.textContent = theme === "light" ? "Light" : "Dark";
+    const icon = themeToggle.querySelector(".theme-icon");
+    const label = themeToggle.querySelector(".theme-label");
+    if (icon) icon.textContent = theme === "light" ? "☀️" : "🌙";
+    if (label) label.textContent = theme === "light" ? "Light" : "Dark";
   }
 }
 
