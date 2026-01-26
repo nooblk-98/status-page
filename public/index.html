@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Status Page – 30-Day Uptime</title>
+  <title>Status Page - 30-Day Uptime</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,9 +18,12 @@
         <h1>Uptime you can trust</h1>
         <p class="sub">Live checks are stored in SQLite for 30 days of history.</p>
       </div>
-      <div class="badge" id="liveBadge">
-        <span class="dot" id="liveDot"></span>
-        <span id="liveText">Idle</span>
+      <div class="hero-actions">
+        <button class="theme-toggle" id="themeToggle" type="button">Dark</button>
+        <div class="badge" id="liveBadge">
+          <span class="dot" id="liveDot"></span>
+          <span id="liveText">Idle</span>
+        </div>
       </div>
     </header>
 
@@ -35,9 +38,7 @@
         </div>
       </div>
       <div class="legend inline-legend">
-        <span class="good"></span> Healthy
-        <span class="warn"></span> Degraded
-        <span class="bad"></span> Down
+        <span class="bad"></span> Downtime windows
       </div>
     </section>
 

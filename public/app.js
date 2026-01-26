@@ -1,4 +1,4 @@
-const DEFAULT_RANGE = { type: "minutes", value: 60 };
+ï»¿const DEFAULT_RANGE = { type: "minutes", value: 60 };
 const RECENT_LIMIT = 4;
 const REFRESH_MS = 15000;
 
@@ -7,6 +7,7 @@ const liveBadge = document.getElementById("liveBadge");
 const liveDot = document.getElementById("liveDot");
 const liveText = document.getElementById("liveText");
 const rangeButtons = document.getElementById("rangeButtons");
+const themeToggle = document.getElementById("themeToggle");
 
 let sites = [];
 let refreshTimer = null;
@@ -27,7 +28,7 @@ function setBadge(state, label) {
 }
 
 function formatTime(ts) {
-  return ts ? new Date(ts).toLocaleString() : "—";
+  return ts ? new Date(ts).toLocaleString() : "--";
 }
 
 function formatDay(ts) {
@@ -44,36 +45,22 @@ function formatDuration(ms) {
   return `${hours}h ${minutes}m`;
 }
 
-function daysAgo(ts) {
-  const now = new Date();
-  const day = new Date(ts);
-  return Math.floor((now - day) / (1000 * 60 * 60 * 24));
-}
-
-function minutesAgo(ts) {
-  return Math.floor((Date.now() - ts) / (1000 * 60));
-}
-
-function hoursAgo(ts) {
-  return Math.floor((Date.now() - ts) / (1000 * 60 * 60));
-}
-
 function rangeToDays(range) {
   if (range.type === "minutes") return range.value / 1440;
   if (range.type === "hours") return range.value / 24;
   return range.value;
 }
 
+function rangeToMs(range) {
+  if (range.type === "minutes") return range.value * 60 * 1000;
+  if (range.type === "hours") return range.value * 60 * 60 * 1000;
+  return range.value * 24 * 60 * 60 * 1000;
+}
+
 function rangeLabel(range) {
   if (range.type === "minutes") return `${range.value} minutes`;
   if (range.type === "hours") return `${range.value} hours`;
   return `${range.value} days`;
-}
-
-function rangeSegments(range) {
-  if (range.type === "minutes") return 60;
-  if (range.type === "hours") return 24;
-  return range.value;
 }
 
 async function fetchJson(url) {
@@ -102,7 +89,46 @@ async function loadLatest(siteId) {
   return data.latest;
 }
 
-function buildTimeline(checks, range, site) {
+function buildDowntimeWindows(checks, range, site) {
+  const intervalSeconds = site?.intervalSeconds || 60;
+  const intervalMs = intervalSeconds * 1000;
+  const rangeEnd = Date.now();
+  const rangeStart = rangeEnd - rangeToMs(range);
+  const sorted = [...checks].sort((a, b) => a.ts - b.ts);
+  const windows = [];
+  let current = null;
+
+  sorted.forEach((entry) => {
+    if (entry.ts < rangeStart - intervalMs) return;
+    if (entry.ok) {
+      if (current) {
+        windows.push(current);
+        current = null;
+      }
+      return;
+    }
+    if (!current) {
+      current = { start: entry.ts, end: entry.ts, last: entry };
+    } else {
+      current.end = entry.ts;
+      current.last = entry;
+    }
+  });
+
+  if (current) windows.push(current);
+
+  return windows
+    .map((win) => ({
+      start: win.start,
+      end: win.end,
+      durationMs: win.end - win.start + intervalMs,
+      statusCode: win.last?.status_code ?? null,
+      error: win.last?.error ?? null,
+    }))
+    .sort((a, b) => b.end - a.end);
+}
+
+function buildTimeline(downtimeWindows, range, site) {
   const wrap = document.createElement("div");
   wrap.className = "uptime-wrap";
 
@@ -111,62 +137,22 @@ function buildTimeline(checks, range, site) {
 
   const intervalSeconds = site?.intervalSeconds || 60;
   const intervalMs = intervalSeconds * 1000;
-  const segments = rangeSegments(range);
+  const rangeMs = rangeToMs(range);
+  const rangeEnd = Date.now();
+  const rangeStart = rangeEnd - rangeMs;
 
-  const buckets = Array.from({ length: segments }, (_, index) => ({
-    offset: segments - index - 1,
-    ok: 0,
-    total: 0,
-    downCount: 0,
-  }));
-
-  checks.forEach((entry) => {
-    let offset = 0;
-    if (range.type === "minutes") {
-      offset = minutesAgo(entry.ts);
-    } else if (range.type === "hours") {
-      offset = hoursAgo(entry.ts);
-    } else {
-      offset = daysAgo(entry.ts);
-    }
-
-    if (offset >= 0 && offset < segments) {
-      const bucket = buckets[segments - offset - 1];
-      bucket.total += 1;
-      if (entry.ok) bucket.ok += 1;
-      else bucket.downCount += 1;
-    }
-  });
-
-  buckets.forEach((bucket) => {
-    const ratio = bucket.total ? bucket.ok / bucket.total : null;
-    const seg = document.createElement("div");
-    seg.className = "uptime-segment";
-
-    if (ratio === null) {
-      seg.classList.add("idle");
-    } else if (ratio > 0.98) {
-      seg.classList.add("good");
-    } else if (ratio > 0.9) {
-      seg.classList.add("warn");
-    } else {
-      seg.classList.add("bad");
-    }
-
-    if (bucket.downCount > 0) {
-      const downMs = bucket.downCount * intervalMs;
-      const date = new Date();
-      if (range.type === "minutes") {
-        date.setMinutes(date.getMinutes() - bucket.offset);
-      } else if (range.type === "hours") {
-        date.setHours(date.getHours() - bucket.offset);
-      } else {
-        date.setDate(date.getDate() - bucket.offset);
-      }
-      seg.title = `Downtime: ${formatDuration(downMs)} (${formatDay(date)})`;
-    }
-
-    bar.appendChild(seg);
+  downtimeWindows.forEach((win) => {
+    const windowStart = Math.max(rangeStart, win.start);
+    const windowEnd = Math.min(rangeEnd, win.end + intervalMs);
+    if (windowEnd <= windowStart) return;
+    const left = ((windowStart - rangeStart) / rangeMs) * 100;
+    const width = ((windowEnd - windowStart) / rangeMs) * 100;
+    const segment = document.createElement("div");
+    segment.className = "uptime-window";
+    segment.style.left = `${left}%`;
+    segment.style.width = `${width}%`;
+    segment.title = `Down: ${formatDuration(win.durationMs)} (${formatTime(win.start)} - ${formatTime(win.end)})`;
+    bar.appendChild(segment);
   });
 
   const labels = document.createElement("div");
@@ -187,14 +173,14 @@ function buildTimeline(checks, range, site) {
   return wrap;
 }
 
-function buildRecent(checks) {
+function buildRecent(downtimeWindows) {
   const list = document.createElement("div");
   list.className = "recent";
-  const recent = checks.slice(0, RECENT_LIMIT);
+  const recent = downtimeWindows.slice(0, RECENT_LIMIT);
   if (!recent.length) {
     const empty = document.createElement("div");
     empty.className = "recent-row";
-    empty.innerHTML = "<span>No checks yet</span><span>—</span><span>—</span>";
+    empty.innerHTML = "<span>No downtime recorded</span><span>--</span><span>--</span>";
     list.appendChild(empty);
     return list;
   }
@@ -203,9 +189,9 @@ function buildRecent(checks) {
     const row = document.createElement("div");
     row.className = "recent-row";
     row.innerHTML = `
-      <span>${formatTime(entry.ts)}</span>
-      <span>${entry.ok ? "Online" : "Down"}</span>
-      <span>${entry.latency_ms ? `${entry.latency_ms} ms` : "—"}</span>
+      <span>${formatTime(entry.end)}</span>
+      <span class="recent-detail">Code: ${entry.statusCode ?? "--"} | Error: ${entry.error ?? "--"}</span>
+      <span>${formatDuration(entry.durationMs)}</span>
     `;
     list.appendChild(row);
   });
@@ -246,11 +232,12 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
   expandBtn.className = "expand-btn";
   expandBtn.type = "button";
   expandBtn.setAttribute("aria-expanded", "false");
-  expandBtn.innerHTML = "Recent checks <span class=\"chev\">?</span>";
+  expandBtn.innerHTML = "Recent downtime <span class=\"chev\">?</span>";
 
   const recentPanel = document.createElement("div");
   recentPanel.className = "recent-panel is-collapsed";
-  const recent = buildRecent(checks);
+  const downtimeWindows = buildDowntimeWindows(checks, range, site);
+  const recent = buildRecent(downtimeWindows);
   recentPanel.appendChild(recent);
 
   expandBtn.addEventListener("click", () => {
@@ -288,7 +275,7 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
     </div>
   `;
 
-  const timeline = buildTimeline(checks, range, site);
+  const timeline = buildTimeline(downtimeWindows, range, site);
 
   card.appendChild(header);
   card.appendChild(meta);
@@ -354,6 +341,25 @@ function startRefresh() {
   refreshTimer = setInterval(refreshAll, REFRESH_MS);
 }
 
+function setTheme(theme) {
+  document.body.setAttribute("data-theme", theme);
+  if (themeToggle) {
+    themeToggle.textContent = theme === "light" ? "Light" : "Dark";
+  }
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem("theme");
+  const theme = savedTheme || "dark";
+  setTheme(theme);
+  if (!themeToggle) return;
+  themeToggle.addEventListener("click", () => {
+    const next = document.body.getAttribute("data-theme") === "light" ? "dark" : "light";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+  });
+}
+
 if (rangeButtons) {
   rangeButtons.addEventListener("click", (event) => {
     const button = event.target.closest(".seg-btn");
@@ -382,6 +388,7 @@ if (rangeButtons) {
 }
 
 window.addEventListener("load", async () => {
+  initTheme();
   setBadge("idle", "Loading");
   await loadSites();
   setActiveRange(DEFAULT_RANGE);
