@@ -1,4 +1,5 @@
 const intervalSeconds = 30;
+const timeoutMs = 8000;
 
 module.exports = [
   {
@@ -6,7 +7,7 @@ module.exports = [
     name: "NoobLk web",
     url: "https://www.itsnooblk.com",
     intervalSeconds,
-    timeoutMs: 8000,
+    timeoutMs,
   },
   {
     id: "jenkins",
@@ -27,6 +28,6 @@ module.exports = [
     name: "Portainer Node",
     url: "https://portainer.itsnooblk.com",
     intervalSeconds,
-    timeoutMs: 8000,
+    timeoutMs,
   },
 ];
