@@ -30,4 +30,11 @@ module.exports = [
     intervalSeconds,
     timeoutMs,
   },
+  {
+    id: "metrics",
+    name: "Grafana Node",
+    url: "https://metrics.itsnooblk.com",
+    intervalSeconds,
+    timeoutMs,
+  },
 ];
