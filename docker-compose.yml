@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  status-page:
+    build: .
+    container_name: status-page
+    ports:
+      - "8080:80"
+    restart: unless-stopped
