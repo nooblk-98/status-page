@@ -431,6 +431,24 @@ body[data-theme="light"] .expand-btn {
   display: none;
 }
 
+.footer {
+  width: min(1100px, 92vw);
+  margin: 0 auto 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.footer a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer a:hover {
+  color: var(--accent-2);
+}
+
 @media (max-width: 720px) {
   .hero {
     flex-direction: column;
