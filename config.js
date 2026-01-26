@@ -37,4 +37,18 @@ module.exports = [
     intervalSeconds,
     timeoutMs,
   },
+  {
+    id: "winsoft",
+    name: "winsoft.lk",
+    url: "https://www.winsoft.lk",
+    intervalSeconds,
+    timeoutMs,
+  },
+  {
+    id: "sarasavi",
+    name: "sarasavi.lk",
+    url: "https://www.sarasavi.lk",
+    intervalSeconds,
+    timeoutMs,
+  },
 ];

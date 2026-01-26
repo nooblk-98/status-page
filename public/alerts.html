@@ -1,0 +1,45 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alerts - Uptime Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Status Console</p>
+        <h1>Downtime alerts</h1>
+        <p class="sub">Latest downtime events across your monitors.</p>
+      </div>
+      <div class="hero-actions">
+        <a class="back-link" href="index.html">Back</a>
+        <button class="theme-toggle" id="themeToggle" type="button">Dark</button>
+      </div>
+    </header>
+
+    <section class="card alerts" id="alertsPanel">
+      <div class="alerts-header">
+        <div class="alerts-title">Downtime alerts</div>
+        <div class="alerts-actions">
+          <button class="alert-read" id="markRead" type="button">Mark as read</button>
+          <div class="muted" id="alertCount">Loading...</div>
+        </div>
+      </div>
+      <div class="alerts-list" id="alertsList"></div>
+      <div class="alerts-empty" id="alertsEmpty"></div>
+    </section>
+  </main>
+  <footer class="footer">
+    Developed by <a href="https://github.com/nooblk-98" target="_blank" rel="noopener">nooblk</a>
+  </footer>
+
+  <script src="alerts.js"></script>
+</body>
+</html>

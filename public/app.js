@@ -12,7 +12,6 @@ const searchInput = document.getElementById("searchInput");
 const searchClear = document.getElementById("searchClear");
 const searchSuggestions = document.getElementById("searchSuggestions");
 const alertToggle = document.getElementById("alertToggle");
-const alertsPanel = document.getElementById("alertsPanel");
 const ALERTS_READ_KEY = "alertsLastRead";
 
 let sites = [];
@@ -401,61 +400,6 @@ function buildSuggestions(query) {
   });
 }
 
-function buildAlerts(items) {
-  if (!alertsPanel) return;
-  alertsPanel.innerHTML = "";
-  const lastRead = Number(localStorage.getItem(ALERTS_READ_KEY) || 0);
-  const unreadCount = items.filter((item) => item.end > lastRead).length;
-  const header = document.createElement("div");
-  header.className = "alerts-header";
-  header.innerHTML = `
-    <div class="alerts-title">Downtime alerts</div>
-    <div class="alerts-actions">
-      <button class="alert-read" type="button">Mark as read</button>
-      <div class="muted">Last ${Math.min(items.length, 10)}</div>
-    </div>
-  `;
-  alertsPanel.appendChild(header);
-
-  const readBtn = header.querySelector(".alert-read");
-  if (readBtn) {
-    readBtn.disabled = unreadCount === 0;
-    readBtn.addEventListener("click", () => {
-      localStorage.setItem(ALERTS_READ_KEY, String(Date.now()));
-      refreshAll();
-    });
-  }
-
-  if (!items.length) {
-    const empty = document.createElement("div");
-    empty.className = "alerts-empty";
-    empty.textContent = "No downtime alerts";
-    alertsPanel.appendChild(empty);
-    return;
-  }
-
-  const list = document.createElement("div");
-  list.className = "alerts-list";
-  items.slice(0, 10).forEach((item) => {
-    const row = document.createElement("div");
-    row.className = "alert-row";
-    row.innerHTML = `
-      <div>
-        <div class="strong">${item.siteName}</div>
-        <div class="muted">${item.siteUrl}</div>
-      </div>
-      <div>
-        <div class="strong">${formatTime(item.end)}</div>
-        <div class="muted">${formatDuration(item.durationMs)}</div>
-      </div>
-      <div class="muted">Code: ${item.statusCode ?? "--"}</div>
-      <div class="muted">Error: ${item.error ?? "--"}</div>
-    `;
-    list.appendChild(row);
-  });
-  alertsPanel.appendChild(list);
-}
-
 async function refreshAll() {
   if (!sites.length) return;
 
@@ -515,8 +459,6 @@ async function refreshAll() {
       }))
     )
     .sort((a, b) => b.end - a.end);
-
-  buildAlerts(alertItems);
 
   if (alertToggle) {
     const lastRead = Number(localStorage.getItem(ALERTS_READ_KEY) || 0);
@@ -616,11 +558,5 @@ if (searchClear) {
       searchSuggestions.innerHTML = "";
     }
     refreshAll();
-  });
-}
-
-if (alertToggle && alertsPanel) {
-  alertToggle.addEventListener("click", () => {
-    alertsPanel.classList.toggle("is-collapsed");
   });
 }

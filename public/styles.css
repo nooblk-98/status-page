@@ -128,6 +128,21 @@ body[data-theme="light"] .badge {
   border-color: rgba(34, 211, 238, 0.5);
 }
 
+.back-link {
+  border: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
 .alert-toggle {
   border: 1px solid var(--border);
   background: rgba(239, 68, 68, 0.12);
@@ -592,6 +607,11 @@ body[data-theme="light"] .alert-row {
 .alert-row .strong {
   color: var(--text);
   font-weight: 600;
+}
+
+.alert-row.is-unread {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
 }
 
 .alerts-empty {
