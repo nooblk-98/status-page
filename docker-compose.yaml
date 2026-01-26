@@ -7,5 +7,7 @@ services:
     # ports:
     #   - "8080:3000"
     volumes:
-      - ./data:/app/data
+      - /opt/uptime/data:/app/data
+    environment:
+      - TZ=Asia/Colombo
     restart: unless-stopped

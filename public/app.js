@@ -1,7 +1,6 @@
 const DEFAULT_RANGE = { type: "minutes", value: 60 };
 const RECENT_LIMIT = 4;
 const REFRESH_MS = 15000;
-const TIME_ZONE = "Asia/Colombo";
 
 const siteGrid = document.getElementById("siteGrid");
 const liveBadge = document.getElementById("liveBadge");
@@ -33,24 +32,11 @@ function setBadge(state, label) {
 }
 
 function formatTime(ts) {
-  return ts
-    ? new Date(ts).toLocaleString(undefined, {
-        timeZone: TIME_ZONE,
-        dateStyle: "medium",
-        timeStyle: "medium",
-      })
-    : "--";
+  return ts ? new Date(ts).toLocaleString() : "--";
 }
 
 function formatDay(ts) {
-  return ts
-    ? new Date(ts).toLocaleDateString(undefined, {
-        timeZone: TIME_ZONE,
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "";
+  return ts ? new Date(ts).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "";
 }
 
 function formatDuration(ms) {
