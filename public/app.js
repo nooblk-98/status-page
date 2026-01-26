@@ -8,10 +8,12 @@ const liveDot = document.getElementById("liveDot");
 const liveText = document.getElementById("liveText");
 const rangeButtons = document.getElementById("rangeButtons");
 const themeToggle = document.getElementById("themeToggle");
+const searchInput = document.getElementById("searchInput");
 
 let sites = [];
 let refreshTimer = null;
 let currentRange = { ...DEFAULT_RANGE };
+let searchQuery = "";
 
 function setBadge(state, label) {
   liveText.textContent = label;
@@ -346,20 +348,39 @@ async function refreshAll() {
         loadSummary(site.id, currentRange),
         loadLatest(site.id),
       ]);
+      const downtimeWindows = buildDowntimeWindows(checksData.checks || [], currentRange, site);
       return {
         site,
         checks: checksData.checks || [],
         summary,
         latest,
+        downtimeWindows,
       };
     })
   );
+
+  const query = searchQuery.trim().toLowerCase();
+  const filtered = results.filter((result) => {
+    if (!query) return true;
+    const name = result.site.name.toLowerCase();
+    const url = result.site.url.toLowerCase();
+    return name.includes(query) || url.includes(query);
+  });
+
+  filtered.sort((a, b) => {
+    const aDown = a.latest && !a.latest.ok;
+    const bDown = b.latest && !b.latest.ok;
+    if (aDown !== bDown) return aDown ? -1 : 1;
+    const aLastDown = a.downtimeWindows?.[0]?.end ?? 0;
+    const bLastDown = b.downtimeWindows?.[0]?.end ?? 0;
+    return bLastDown - aLastDown;
+  });
 
   siteGrid.innerHTML = "";
   let anyDown = false;
   let anyUp = false;
 
-  results.forEach((result) => {
+  filtered.forEach((result) => {
     if (result.latest?.ok) anyUp = true;
     if (result.latest && !result.latest.ok) anyDown = true;
     siteGrid.appendChild(renderSiteCard(result, currentRange));
@@ -429,3 +450,10 @@ window.addEventListener("load", async () => {
   setActiveRange(DEFAULT_RANGE);
   startRefresh();
 });
+
+if (searchInput) {
+  searchInput.addEventListener("input", (event) => {
+    searchQuery = event.target.value || "";
+    refreshAll();
+  });
+}

@@ -353,6 +353,30 @@ body[data-theme="light"] .badge {
 .legend .warn { background: var(--warn); }
 .legend .bad { background: var(--bad); }
 
+.search-wrap {
+  display: flex;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+body[data-theme="light"] .search-input {
+  background: rgba(255, 255, 255, 0.85);
+}
+
 .recent {
   display: grid;
   gap: 6px;
