@@ -17,6 +17,12 @@
 
 ---
 
+## UI Preview
+
+![UI Preview](./images/ui.png)
+
+---
+
 ### What is included
 
 - Live monitor checks with configurable intervals and timeouts.
