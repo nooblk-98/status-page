@@ -15,7 +15,7 @@ status-page/
 Edit `config.js` and add your endpoints:
 ```js
 module.exports = [
-  { id: "api", name: "API", url: "https://example.com/health", intervalSeconds: 60 }
+  { id: "api", name: "API", url: "https://example.com/health", intervalSeconds: 3600 }
 ];
 ```
 
