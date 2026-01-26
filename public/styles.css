@@ -285,6 +285,7 @@ body[data-theme="light"] .badge {
   flex: 1;
   border-radius: 6px;
   background: rgba(148, 163, 184, 0.2);
+  pointer-events: none;
 }
 
 .uptime-segment.good {
@@ -307,7 +308,10 @@ body[data-theme="light"] .badge {
   background: var(--bad);
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
   min-width: 2px;
+  z-index: 2;
+  pointer-events: auto;
 }
+
 
 .uptime-labels {
   display: grid;

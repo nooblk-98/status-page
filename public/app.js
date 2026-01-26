@@ -186,11 +186,13 @@ function buildTimeline(downtimeWindows, checks, range, site) {
     if (windowEnd <= windowStart) return;
     const left = ((windowStart - rangeStart) / rangeMs) * 100;
     const width = ((windowEnd - windowStart) / rangeMs) * 100;
+    if (!Number.isFinite(left) || !Number.isFinite(width)) return;
+    const safeLeft = Math.max(0, Math.min(100, left));
+    const safeWidth = Math.max(0.5, Math.min(100 - safeLeft, width));
     const segment = document.createElement("div");
     segment.className = "uptime-window";
-    segment.style.left = `${left}%`;
-    segment.style.width = `${width}%`;
-    segment.title = `Down: ${formatDuration(win.durationMs)} (${formatTime(win.start)} - ${formatTime(win.end)})`;
+    segment.style.left = `${safeLeft}%`;
+    segment.style.width = `${safeWidth}%`;
     bar.appendChild(segment);
   });
 
