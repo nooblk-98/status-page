@@ -271,12 +271,32 @@ body[data-theme="light"] .badge {
 
 .uptime-bar {
   position: relative;
+  display: flex;
+  gap: 2px;
   height: 18px;
   padding: 4px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.12);
   border: 1px solid var(--border);
   overflow: hidden;
+}
+
+.uptime-segment {
+  flex: 1;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.uptime-segment.good {
+  background: var(--good);
+}
+
+.uptime-segment.warn {
+  background: var(--warn);
+}
+
+.uptime-segment.bad {
+  background: var(--bad);
 }
 
 .uptime-window {

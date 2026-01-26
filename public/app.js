@@ -57,6 +57,12 @@ function rangeToMs(range) {
   return range.value * 24 * 60 * 60 * 1000;
 }
 
+function rangeSegments(range) {
+  if (range.type === "minutes") return 60;
+  if (range.type === "hours") return 24;
+  return range.value;
+}
+
 function rangeLabel(range) {
   if (range.type === "minutes") return `${range.value} minutes`;
   if (range.type === "hours") return `${range.value} hours`;
@@ -128,7 +134,7 @@ function buildDowntimeWindows(checks, range, site) {
     .sort((a, b) => b.end - a.end);
 }
 
-function buildTimeline(downtimeWindows, range, site) {
+function buildTimeline(downtimeWindows, checks, range, site) {
   const wrap = document.createElement("div");
   wrap.className = "uptime-wrap";
 
@@ -140,6 +146,35 @@ function buildTimeline(downtimeWindows, range, site) {
   const rangeMs = rangeToMs(range);
   const rangeEnd = Date.now();
   const rangeStart = rangeEnd - rangeMs;
+  const segments = rangeSegments(range);
+  const bucketMs = rangeMs / segments;
+  const buckets = Array.from({ length: segments }, () => ({ ok: 0, total: 0 }));
+
+  // Use raw checks to compute per-segment health.
+  // This keeps the original up/down bars visible behind downtime windows.
+  checks.forEach((entry) => {
+    const offset = Math.floor((rangeEnd - entry.ts) / bucketMs);
+    if (offset < 0 || offset >= segments) return;
+    const bucket = buckets[segments - offset - 1];
+    bucket.total += 1;
+    if (entry.ok) bucket.ok += 1;
+  });
+
+  buckets.forEach((bucket) => {
+    const ratio = bucket.total ? bucket.ok / bucket.total : null;
+    const seg = document.createElement("div");
+    seg.className = "uptime-segment";
+    if (ratio === null) {
+      seg.classList.add("idle");
+    } else if (ratio > 0.98) {
+      seg.classList.add("good");
+    } else if (ratio > 0.9) {
+      seg.classList.add("warn");
+    } else {
+      seg.classList.add("bad");
+    }
+    bar.appendChild(seg);
+  });
 
   downtimeWindows.forEach((win) => {
     const windowStart = Math.max(rangeStart, win.start);
@@ -275,7 +310,7 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
     </div>
   `;
 
-  const timeline = buildTimeline(downtimeWindows, range, site);
+  const timeline = buildTimeline(downtimeWindows, checks, range, site);
 
   card.appendChild(header);
   card.appendChild(meta);
