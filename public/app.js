@@ -264,51 +264,6 @@ function buildTimeline(downtimeWindows, checks, range, site) {
     bar.appendChild(seg);
   });
 
-  downtimeWindows.forEach((win) => {
-    const windowStart = Math.max(rangeStart, win.start);
-    const windowEnd = Math.min(rangeEnd, win.end + intervalMs);
-    if (windowEnd <= windowStart) return;
-    const left = ((windowStart - rangeStart) / rangeMs) * 100;
-    const width = ((windowEnd - windowStart) / rangeMs) * 100;
-    if (!Number.isFinite(left) || !Number.isFinite(width)) return;
-    const safeLeft = Math.max(0, Math.min(100, left));
-    const safeWidth = Math.max(0.5, Math.min(100 - safeLeft, width));
-    const segment = document.createElement("div");
-    segment.className = "uptime-window";
-    segment.style.left = `${safeLeft}%`;
-    segment.style.width = `${safeWidth}%`;
-    const code = win.statusCode ?? "--";
-    const err = win.error ?? null;
-
-    segment.addEventListener("mouseenter", (e) => {
-      let content = `
-        <div class="tooltip-header">Downtime Incident</div>
-        <div class="tooltip-row">
-          <span class="tooltip-label">Started</span>
-          <span class="tooltip-val">${formatTime(win.start)}</span>
-        </div>
-        <div class="tooltip-row">
-          <span class="tooltip-label">Resolved</span>
-          <span class="tooltip-val">${formatTime(win.end)}</span>
-        </div>
-        <div class="tooltip-row">
-          <span class="tooltip-label">Duration</span>
-          <span class="tooltip-val">${formatDuration(win.durationMs)}</span>
-        </div>
-        <div class="tooltip-row">
-          <span class="tooltip-label">Status Code</span>
-          <span class="tooltip-val">${code}</span>
-        </div>
-      `;
-      if (err) {
-        content += `<div class="tooltip-err">${err}</div>`;
-      }
-      showTooltip(e, content);
-    });
-    segment.addEventListener("mouseleave", hideTooltip);
-    // segment.dataset.tooltip = ... removed
-    bar.appendChild(segment);
-  });
 
   const labels = document.createElement("div");
   labels.className = "uptime-labels";

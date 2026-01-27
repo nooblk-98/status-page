@@ -358,17 +358,6 @@ body[data-theme="light"] .alert-toggle {
   background: var(--bad);
 }
 
-.uptime-window {
-  position: absolute;
-  top: 4px;
-  height: calc(100% - 8px);
-  border-radius: 6px;
-  background: var(--bad);
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
-  min-width: 2px;
-  z-index: 2;
-  pointer-events: auto;
-}
 
 
 .global-tooltip {
