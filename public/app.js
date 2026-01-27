@@ -12,6 +12,7 @@ const searchInput = document.getElementById("searchInput");
 const searchClear = document.getElementById("searchClear");
 const searchSuggestions = document.getElementById("searchSuggestions");
 const alertToggle = document.getElementById("alertToggle");
+let globalTooltip = null;
 const ALERTS_READ_KEY = "alertsLastRead";
 
 let sites = [];
@@ -31,6 +32,35 @@ function setBadge(state, label) {
     liveDot.style.background = "var(--muted)";
     liveDot.style.boxShadow = "0 0 12px rgba(148, 163, 184, 0.8)";
   }
+}
+
+function createGlobalTooltip() {
+  if (globalTooltip) return;
+  globalTooltip = document.createElement("div");
+  globalTooltip.className = "global-tooltip";
+  document.body.appendChild(globalTooltip);
+}
+
+function showTooltip(e, content) {
+  if (!globalTooltip) createGlobalTooltip();
+  globalTooltip.innerHTML = content;
+  globalTooltip.classList.add("is-visible");
+
+  const rect = globalTooltip.getBoundingClientRect();
+  let top = e.clientY - rect.height - 10;
+  let left = e.clientX - rect.width / 2;
+
+  // Keep on screen
+  if (top < 10) top = e.clientY + 20;
+  if (left < 10) left = 10;
+  if (left + rect.width > window.innerWidth - 10) left = window.innerWidth - rect.width - 10;
+
+  globalTooltip.style.top = `${top}px`;
+  globalTooltip.style.left = `${left}px`;
+}
+
+function hideTooltip() {
+  if (globalTooltip) globalTooltip.classList.remove("is-visible");
 }
 
 function formatTime(ts) {
@@ -174,17 +204,63 @@ function buildTimeline(downtimeWindows, checks, range, site) {
     const bucketEnd = bucketStart + bucketMs;
     if (bucket.total === 0) {
       seg.classList.add("idle");
-      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | No data`;
+      seg.addEventListener("mouseenter", (e) => {
+        showTooltip(e, `
+          <div class="tooltip-header">No Data</div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">Start</span>
+            <span class="tooltip-val">${formatTime(bucketStart)}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">End</span>
+            <span class="tooltip-val">${formatTime(bucketEnd)}</span>
+          </div>
+        `);
+      });
     } else if (bucket.down === 0) {
       seg.classList.add("good");
-      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | Healthy (${bucket.ok}/${bucket.total})`;
-    } else if (bucket.down === bucket.total && bucket.total >= 2) {
-      seg.classList.add("bad");
-      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | Down (${bucket.down}/${bucket.total})`;
+      seg.addEventListener("mouseenter", (e) => {
+        showTooltip(e, `
+          <div class="tooltip-header">Healthy</div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">From</span>
+            <span class="tooltip-val">${formatTime(bucketStart)}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">To</span>
+            <span class="tooltip-val">${formatTime(bucketEnd)}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">Success Rate</span>
+            <span class="tooltip-val">100%</span>
+          </div>
+        `);
+      });
     } else {
-      seg.classList.add("warn");
-      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | Degraded (${bucket.down} down / ${bucket.total})`;
+      // Mixed or Down bucket base
+      if (bucket.down === bucket.total && bucket.total >= 2) seg.classList.add("bad");
+      else seg.classList.add("warn");
+
+      const rate = ((bucket.ok / bucket.total) * 100).toFixed(1);
+      seg.addEventListener("mouseenter", (e) => {
+        showTooltip(e, `
+          <div class="tooltip-header">${bucket.down === bucket.total ? 'Downtime Detected' : 'Degraded'}</div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">From</span>
+            <span class="tooltip-val">${formatTime(bucketStart)}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">To</span>
+            <span class="tooltip-val">${formatTime(bucketEnd)}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-label">Availability</span>
+            <span class="tooltip-val">${rate}%</span>
+          </div>
+        `);
+      });
     }
+    seg.addEventListener("mouseleave", hideTooltip);
     bar.appendChild(seg);
   });
 
@@ -202,8 +278,35 @@ function buildTimeline(downtimeWindows, checks, range, site) {
     segment.style.left = `${safeLeft}%`;
     segment.style.width = `${safeWidth}%`;
     const code = win.statusCode ?? "--";
-    const err = win.error ?? "--";
-    segment.dataset.tooltip = `${formatTime(win.start)} -> ${formatTime(win.end)} | Code: ${code} | Duration: ${formatDuration(win.durationMs)} | Error: ${err}`;
+    const err = win.error ?? null;
+
+    segment.addEventListener("mouseenter", (e) => {
+      let content = `
+        <div class="tooltip-header">Downtime Incident</div>
+        <div class="tooltip-row">
+          <span class="tooltip-label">Started</span>
+          <span class="tooltip-val">${formatTime(win.start)}</span>
+        </div>
+        <div class="tooltip-row">
+          <span class="tooltip-label">Resolved</span>
+          <span class="tooltip-val">${formatTime(win.end)}</span>
+        </div>
+        <div class="tooltip-row">
+          <span class="tooltip-label">Duration</span>
+          <span class="tooltip-val">${formatDuration(win.durationMs)}</span>
+        </div>
+        <div class="tooltip-row">
+          <span class="tooltip-label">Status Code</span>
+          <span class="tooltip-val">${code}</span>
+        </div>
+      `;
+      if (err) {
+        content += `<div class="tooltip-err">${err}</div>`;
+      }
+      showTooltip(e, content);
+    });
+    segment.addEventListener("mouseleave", hideTooltip);
+    // segment.dataset.tooltip = ... removed
     bar.appendChild(segment);
   });
 
