@@ -25,9 +25,9 @@ function setBadge(state, label) {
   if (state === "live") {
     liveDot.style.background = "var(--good)";
     liveDot.style.boxShadow = "0 0 12px rgba(34, 197, 94, 0.9)";
-  } else if (state === "warn") {
-    liveDot.style.background = "var(--warn)";
-    liveDot.style.boxShadow = "0 0 12px rgba(250, 204, 21, 0.8)";
+  } else if (state === "bad") {
+    liveDot.style.background = "var(--bad)";
+    liveDot.style.boxShadow = "0 0 12px rgba(239, 68, 68, 0.8)";
   } else {
     liveDot.style.background = "var(--muted)";
     liveDot.style.boxShadow = "0 0 12px rgba(148, 163, 184, 0.8)";
@@ -237,14 +237,13 @@ function buildTimeline(downtimeWindows, checks, range, site) {
         `);
       });
     } else {
-      // Mixed or Down bucket base
-      if (bucket.down === bucket.total && bucket.total >= 2) seg.classList.add("bad");
-      else seg.classList.add("warn");
+      // Any downtime in the bucket is now treated as "Down" (bad)
+      seg.classList.add("bad");
 
       const rate = ((bucket.ok / bucket.total) * 100).toFixed(1);
       seg.addEventListener("mouseenter", (e) => {
         showTooltip(e, `
-          <div class="tooltip-header">${bucket.down === bucket.total ? 'Downtime Detected' : 'Degraded'}</div>
+          <div class="tooltip-header">Down</div>
           <div class="tooltip-row">
             <span class="tooltip-label">From</span>
             <span class="tooltip-val">${formatTime(bucketStart)}</span>
@@ -525,7 +524,7 @@ async function refreshAll() {
     siteGrid.appendChild(renderSiteCard(result, currentRange));
   });
 
-  if (anyDown) setBadge("warn", "Issues detected");
+  if (anyDown) setBadge("bad", "Issues detected");
   else if (anyUp) setBadge("live", "All systems normal");
   else setBadge("idle", "Waiting for data");
 }
