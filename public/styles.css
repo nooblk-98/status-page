@@ -341,7 +341,9 @@ body[data-theme="light"] .alert-toggle {
   flex: 1;
   border-radius: 6px;
   background: rgba(148, 163, 184, 0.2);
-  pointer-events: none;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .uptime-segment.good {
@@ -366,6 +368,62 @@ body[data-theme="light"] .alert-toggle {
   min-width: 2px;
   z-index: 2;
   pointer-events: auto;
+}
+
+.uptime-window::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 140%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(2, 6, 23, 0.94);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
+  z-index: 5;
+}
+
+.uptime-window:hover::after {
+  opacity: 1;
+}
+
+body[data-theme="light"] .uptime-window::after {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.uptime-segment::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 140%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(2, 6, 23, 0.94);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
+  z-index: 4;
+}
+
+.uptime-segment:hover::after {
+  opacity: 1;
+}
+
+body[data-theme="light"] .uptime-segment::after {
+  background: rgba(255, 255, 255, 0.98);
 }
 
 

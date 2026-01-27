@@ -167,17 +167,23 @@ function buildTimeline(downtimeWindows, checks, range, site) {
     else bucket.down += 1;
   });
 
-  buckets.forEach((bucket) => {
+  buckets.forEach((bucket, bucketIndex) => {
     const seg = document.createElement("div");
     seg.className = "uptime-segment";
+    const bucketStart = rangeStart + bucketIndex * bucketMs;
+    const bucketEnd = bucketStart + bucketMs;
     if (bucket.total === 0) {
       seg.classList.add("idle");
+      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | No data`;
     } else if (bucket.down === 0) {
       seg.classList.add("good");
+      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | Healthy (${bucket.ok}/${bucket.total})`;
     } else if (bucket.down === bucket.total && bucket.total >= 2) {
       seg.classList.add("bad");
+      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | Down (${bucket.down}/${bucket.total})`;
     } else {
       seg.classList.add("warn");
+      seg.dataset.tooltip = `${formatTime(bucketStart)} -> ${formatTime(bucketEnd)} | Degraded (${bucket.down} down / ${bucket.total})`;
     }
     bar.appendChild(seg);
   });
@@ -195,6 +201,9 @@ function buildTimeline(downtimeWindows, checks, range, site) {
     segment.className = "uptime-window";
     segment.style.left = `${safeLeft}%`;
     segment.style.width = `${safeWidth}%`;
+    const code = win.statusCode ?? "--";
+    const err = win.error ?? "--";
+    segment.dataset.tooltip = `${formatTime(win.start)} -> ${formatTime(win.end)} | Code: ${code} | Duration: ${formatDuration(win.durationMs)} | Error: ${err}`;
     bar.appendChild(segment);
   });
 
@@ -271,27 +280,10 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
   pill.textContent = "Waiting";
   updateStatusPill(pill, latest);
 
-  const expandBtn = document.createElement("button");
-  expandBtn.className = "expand-btn";
-  expandBtn.type = "button";
-  expandBtn.setAttribute("aria-expanded", "false");
-  expandBtn.innerHTML = "Recent downtime <span class=\"chev\">?</span>";
-
-  const recentPanel = document.createElement("div");
-  recentPanel.className = "recent-panel is-collapsed";
   const downtimeWindows = buildDowntimeWindows(checks, range, site);
-  const recent = buildRecent(downtimeWindows);
-  recentPanel.appendChild(recent);
-
-  expandBtn.addEventListener("click", () => {
-    const expanded = expandBtn.getAttribute("aria-expanded") === "true";
-    expandBtn.setAttribute("aria-expanded", expanded ? "false" : "true");
-    recentPanel.classList.toggle("is-collapsed", expanded);
-  });
 
   const actions = document.createElement("div");
   actions.className = "site-actions";
-  actions.appendChild(expandBtn);
   actions.appendChild(pill);
 
   header.appendChild(titleWrap);
@@ -323,7 +315,6 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
   card.appendChild(header);
   card.appendChild(meta);
   card.appendChild(timeline);
-  card.appendChild(recentPanel);
 
   return card;
 }
