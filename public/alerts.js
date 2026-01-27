@@ -131,19 +131,35 @@ function renderAlerts(items) {
 
   items.slice(0, 50).forEach((item) => {
     const row = document.createElement("div");
-    row.className = "alert-row";
+    row.className = "alert-card";
     if (item.end > lastRead) row.classList.add("is-unread");
+
+    // Formatting values
+    const err = item.error ? `<div class="alert-err">${item.error}</div>` : "";
+    const code = item.statusCode ?? "--";
+
     row.innerHTML = `
-      <div>
-        <div class="strong">${item.siteName}</div>
-        <div class="muted">${item.siteUrl}</div>
+      <div class="alert-header">
+        <div>
+          <div class="alert-site">${item.siteName}</div>
+          <div class="alert-url">${item.siteUrl}</div>
+        </div>
+        ${err}
       </div>
-      <div>
-        <div class="strong">${formatTime(item.end)}</div>
-        <div class="muted">${formatDuration(item.durationMs)}</div>
+      <div class="alert-meta">
+        <div>
+          <div class="alert-label">Time</div>
+          <div class="alert-value">${formatTime(item.end)}</div>
+        </div>
+        <div>
+          <div class="alert-label">Duration</div>
+          <div class="alert-value">${formatDuration(item.durationMs)}</div>
+        </div>
+        <div>
+          <div class="alert-label">Code</div>
+          <div class="alert-value">${code}</div>
+        </div>
       </div>
-      <div class="muted">Code: ${item.statusCode ?? "--"}</div>
-      <div class="muted">Error: ${item.error ?? "--"}</div>
     `;
     alertsList.appendChild(row);
   });

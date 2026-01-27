@@ -684,50 +684,96 @@ body[data-theme="light"] .expand-btn {
   gap: 8px;
 }
 
-.alert-row {
-  display: grid;
-  grid-template-columns: minmax(140px, 1.2fr) minmax(160px, 1.6fr) minmax(120px, 1fr) minmax(120px, 1fr);
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
+
+.alert-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
   border: 1px solid var(--border);
-  background: rgba(2, 6, 23, 0.6);
-  font-size: 0.85rem;
+  background: var(--card);
+  backdrop-filter: blur(14px);
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-body[data-theme="light"] .alert-row {
-  background: rgba(255, 255, 255, 0.9);
+.alert-card:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+  transform: translateY(-2px);
 }
 
-.alert-row .muted {
-  color: var(--muted);
+.alert-card.is-unread {
+  border-color: rgba(249, 115, 22, 0.6);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.15);
 }
 
-.alert-row .strong {
-  color: var(--text);
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.alert-site {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.1rem;
   font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
 }
 
-.alert-row.is-unread {
-  border-color: rgba(239, 68, 68, 0.6);
-  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
-}
-
-.alerts-empty {
+.alert-url {
+  font-size: 0.8rem;
   color: var(--muted);
-  font-size: 0.85rem;
-  padding: 6px 0;
 }
+
+.alert-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.alert-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.alert-value {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.alert-err {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--bad);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
 
 .alert-read {
   border: 1px solid var(--border);
   background: rgba(148, 163, 184, 0.12);
   color: var(--text);
-  padding: 6px 10px;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alert-read:hover:not(:disabled) {
+  border-color: rgba(34, 211, 238, 0.5);
+  background: rgba(34, 211, 238, 0.1);
 }
 
 .alert-read:disabled {
