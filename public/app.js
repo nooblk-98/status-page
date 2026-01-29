@@ -318,6 +318,21 @@ function updateStatusPill(pill, entry) {
 function renderSiteCard({ site, summary, latest, checks }, range) {
   const card = document.createElement("div");
   card.className = "card site-card";
+  card.style.cursor = "pointer";
+  card.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
+
+  // Add click handler to navigate to monitor detail page
+  card.addEventListener("click", () => {
+    window.location.href = `monitor.html?id=${encodeURIComponent(site.id)}`;
+  });
+
+  // Add hover effect
+  card.addEventListener("mouseenter", () => {
+    card.style.transform = "translateY(-2px)";
+  });
+  card.addEventListener("mouseleave", () => {
+    card.style.transform = "translateY(0)";
+  });
 
   const header = document.createElement("div");
   header.className = "site-header";

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Monitor Details - Status Page</title>
+    <link rel="icon" href="images/logo.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="monitor.css" />
+</head>
+
+<body>
+    <div class="bg"></div>
+    <main class="shell">
+        <header class="hero">
+            <div>
+                <div class="brand">
+                    <img src="images/logo.svg" alt="Status Page logo" />
+                    <span>Status Page</span>
+                </div>
+                <p class="eyebrow">Monitor Details</p>
+                <h1 id="monitorName">Loading...</h1>
+                <p class="sub" id="monitorUrl">--</p>
+            </div>
+            <div class="hero-actions">
+                <a class="back-btn" href="index.html">← Back to Dashboard</a>
+                <button class="theme-toggle" id="themeToggle" type="button">
+                    <span class="theme-icon" aria-hidden="true">🌙</span>
+                    <span class="theme-label">Dark</span>
+                </button>
+                <div class="badge" id="statusBadge">
+                    <span class="dot" id="statusDot"></span>
+                    <span id="statusText">Loading</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="card info">
+            <div class="field">
+                <label>History window</label>
+                <div class="segmented" id="rangeButtons">
+                    <button class="seg-btn is-active" type="button" data-minutes="60">60 min</button>
+                    <button class="seg-btn" type="button" data-hours="24">24 hours</button>
+                    <button class="seg-btn" type="button" data-days="30">30 days</button>
+                    <button class="seg-btn" type="button" data-days="90">90 days</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="card stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Current Status</div>
+                <div class="stat-value" id="currentStatus">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Uptime</div>
+                <div class="stat-value" id="uptimePercent">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Checked</div>
+                <div class="stat-value" id="lastChecked">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average Latency</div>
+                <div class="stat-value" id="avgLatency">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Checks</div>
+                <div class="stat-value" id="totalChecks">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Check Interval</div>
+                <div class="stat-value" id="checkInterval">--</div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 class="section-title">Uptime History</h2>
+            <div id="timelineContainer"></div>
+        </section>
+
+        <section class="card">
+            <h2 class="section-title">Recent Downtime Events</h2>
+            <div id="downtimeList"></div>
+        </section>
+
+        <section class="card">
+            <h2 class="section-title">Response Time Chart</h2>
+            <div id="latencyChart" class="chart-container"></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        Developed by <a href="https://github.com/nooblk-98" target="_blank" rel="noopener">nooblk</a>
+    </footer>
+
+    <script src="monitor.js"></script>
+</body>
+
+</html>
