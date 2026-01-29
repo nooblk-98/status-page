@@ -300,12 +300,33 @@ function renderLatencyChart(checks) {
         return;
     }
 
-    const chartDiv = document.createElement('div');
-    chartDiv.className = 'latency-chart';
-
     // Get last 50 checks for the chart
     const recentChecks = checks.slice(-50);
     const maxLatency = Math.max(...recentChecks.map(c => c.latency_ms || 0), 1);
+
+    // Create wrapper for chart with axes
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chart-wrapper';
+
+    // Create Y-axis (latency values)
+    const yAxis = document.createElement('div');
+    yAxis.className = 'chart-axis-y';
+    const yLabels = [
+        Math.round(maxLatency),
+        Math.round(maxLatency * 0.75),
+        Math.round(maxLatency * 0.5),
+        Math.round(maxLatency * 0.25),
+        0
+    ];
+    yLabels.forEach(label => {
+        const span = document.createElement('span');
+        span.textContent = `${label}ms`;
+        yAxis.appendChild(span);
+    });
+
+    // Create chart container
+    const chartDiv = document.createElement('div');
+    chartDiv.className = 'latency-chart';
 
     recentChecks.forEach((check) => {
         const bar = document.createElement('div');
@@ -341,7 +362,20 @@ function renderLatencyChart(checks) {
         chartDiv.appendChild(bar);
     });
 
-    latencyChart.appendChild(chartDiv);
+    // Create X-axis (time labels)
+    const xAxis = document.createElement('div');
+    xAxis.className = 'chart-axis-x';
+    const xLabelLeft = document.createElement('span');
+    xLabelLeft.textContent = 'Oldest';
+    const xLabelRight = document.createElement('span');
+    xLabelRight.textContent = 'Newest';
+    xAxis.appendChild(xLabelLeft);
+    xAxis.appendChild(xLabelRight);
+
+    wrapper.appendChild(yAxis);
+    wrapper.appendChild(chartDiv);
+    wrapper.appendChild(xAxis);
+    latencyChart.appendChild(wrapper);
 }
 
 function setStatusBadge(isOnline) {
