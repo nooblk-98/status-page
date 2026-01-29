@@ -296,7 +296,7 @@ function renderLatencyChart(checks) {
     latencyChart.innerHTML = '';
 
     if (!checks || checks.length === 0) {
-        latencyChart.innerHTML = '<div style="color: var(--muted);">No latency data available</div>';
+        latencyChart.innerHTML = '<div style="color: var(--muted); text-align: center;">No latency data available</div>';
         return;
     }
 
@@ -305,18 +305,15 @@ function renderLatencyChart(checks) {
 
     // Get last 50 checks for the chart
     const recentChecks = checks.slice(-50);
-    const maxLatency = Math.max(...recentChecks.map(c => c.latency_ms || 0));
+    const maxLatency = Math.max(...recentChecks.map(c => c.latency_ms || 0), 1);
 
-    recentChecks.forEach((check, index) => {
+    recentChecks.forEach((check) => {
         const bar = document.createElement('div');
         bar.className = 'chart-bar';
         const latency = check.latency_ms || 0;
-        const height = (latency / maxLatency) * 100;
-        const width = 100 / recentChecks.length;
+        const heightPercent = (latency / maxLatency) * 100;
 
-        bar.style.height = `${height}%`;
-        bar.style.width = `${width}%`;
-        bar.style.left = `${index * width}%`;
+        bar.style.height = `${heightPercent}%`;
 
         if (latency > 500) {
             bar.classList.add('high-latency');
@@ -401,11 +398,19 @@ async function refreshMonitorData() {
         // Update status badge
         setStatusBadge(latest?.ok);
 
-        // Update stats
+        // Update stats - format timestamps more concisely
         currentStatus.textContent = latest?.ok ? "Online" : "Down";
         currentStatus.style.color = latest?.ok ? "var(--good)" : "var(--bad)";
         uptimePercent.textContent = summary ? `${summary.percent.toFixed(2)}%` : "--";
-        lastChecked.textContent = formatTime(latest?.ts);
+
+        // Format last checked more concisely
+        if (latest?.ts) {
+            const date = new Date(latest.ts);
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            lastChecked.textContent = timeStr;
+        } else {
+            lastChecked.textContent = "--";
+        }
 
         const checks = checksData.checks || [];
         const validLatencies = checks.filter(c => c.latency_ms).map(c => c.latency_ms);
