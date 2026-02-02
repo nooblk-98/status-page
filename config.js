@@ -23,13 +23,6 @@ module.exports = [
     intervalSeconds,
     timeoutMs,
   },
-    {
-    id: "immortalwrt-downloads",
-    name: "ImmortalWrt Downloads",
-    url: "https://downloads.immortalwrt.org/",
-    intervalSeconds,
-    timeoutMs,
-  },
   {
     id: "jenkins",
     name: "Jenkins Site",
