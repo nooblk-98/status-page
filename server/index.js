@@ -1,8 +1,9 @@
 const path = require("path");
+require("dotenv").config();
 const express = require("express");
 const { initDb } = require("./db");
 const { startMonitoring } = require("./monitor");
-const sites = require("../config");
+const { sites } = require("../config");
 
 const app = express();
 const port = process.env.PORT || 3000;

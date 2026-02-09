@@ -1,7 +1,7 @@
 const intervalSeconds = 30;
 const timeoutMs = 8000;
 
-module.exports = [
+const sites = [
   {
     id: "nooblk-web",
     name: "NoobLk web",
@@ -45,3 +45,5 @@ module.exports = [
     timeoutMs,
   },
 ];
+
+module.exports = { sites };

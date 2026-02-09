@@ -99,6 +99,36 @@ module.exports = [
 
 ---
 
+---
+
+## Notifications
+
+You can configure notifications for **Email**, **Google Chat**, and **Microsoft Teams** by creating a `.env` file in the root directory (or setting system environment variables).
+
+### Supported Variables
+
+```env
+# Email Configuration
+EMAIL_ENABLED=true
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=user@example.com
+EMAIL_PASS=password
+EMAIL_FROM="Status Page" <no-reply@example.com>
+EMAIL_TO=admin@example.com
+
+# Google Chat Configuration
+GOOGLE_CHAT_ENABLED=true
+GOOGLE_CHAT_WEBHOOK_URL=https://chat.googleapis.com/...
+
+# MS Teams Configuration
+TEAMS_ENABLED=true
+TEAMS_WEBHOOK_URL=https://outlook.office.com/...
+```
+
+---
+
 ## Pages
 
 - Main dashboard: `/` (served from `public/index.html`)
