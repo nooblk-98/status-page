@@ -22,15 +22,15 @@ let searchQuery = "";
 
 function setBadge(state, label) {
   liveText.textContent = label;
+
+  // Reset classes
+  liveDot.className = "dot";
+  liveDot.style = ""; // Clear inline styles
+
   if (state === "live") {
-    liveDot.style.background = "var(--good)";
-    liveDot.style.boxShadow = "0 0 12px rgba(34, 197, 94, 0.9)";
+    liveDot.classList.add("live");
   } else if (state === "bad") {
-    liveDot.style.background = "var(--bad)";
-    liveDot.style.boxShadow = "0 0 12px rgba(239, 68, 68, 0.8)";
-  } else {
-    liveDot.style.background = "var(--muted)";
-    liveDot.style.boxShadow = "0 0 12px rgba(148, 163, 184, 0.8)";
+    liveDot.classList.add("bad");
   }
 }
 
@@ -341,9 +341,15 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
   const title = document.createElement("div");
   title.className = "site-title";
   title.textContent = site.name;
+
   const url = document.createElement("div");
   url.className = "site-url";
-  url.textContent = site.url;
+
+  // Protocol detection
+  const protocol = site.url.startsWith("https") ? "HTTPS" : "HTTP";
+  const protocolBadge = `<span class="protocol">${protocol}</span>`;
+
+  url.innerHTML = `${protocolBadge}${site.url.replace(/^https?:\/\//, "")}`;
   titleWrap.appendChild(title);
   titleWrap.appendChild(url);
 
@@ -373,12 +379,17 @@ function renderSiteCard({ site, summary, latest, checks }, range) {
       <span class="value">${summary ? summary.percent.toFixed(2) : "0.00"}%</span>
     </div>
     <div>
-      <span class="label">Checks stored</span>
+      <span class="label">Checks</span>
       <span class="value">${summary ? summary.total : 0}</span>
     </div>
     <div>
       <span class="label">Latency</span>
-      <span class="value latency">${latest?.latency_ms ?? "--"} ms</span>
+      <span class="value latency" style="color: ${latest?.latency_ms < 200
+      ? "var(--good)"
+      : latest?.latency_ms < 500
+        ? "var(--warn)"
+        : "var(--muted)"
+    }">${latest?.latency_ms ?? "--"} ms</span>
     </div>
   `;
 
