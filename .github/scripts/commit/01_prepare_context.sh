@@ -8,6 +8,10 @@ CURRENT_MSG="$(git log -1 --pretty=%B | tr -d '\r')"
 CURRENT_SUBJECT="$(git log -1 --pretty=%s | tr -d '\r')"
 COMMIT_SHA="$(git rev-parse HEAD)"
 CURRENT_SUBJECT_B64="$(printf '%s' "$CURRENT_SUBJECT" | base64 -w 0)"
+CHANGED_FILES="$(git show --pretty='' --name-only "$COMMIT_SHA" | sed '/^$/d' | head -n 25)"
+SHORTSTAT="$(git show --shortstat --oneline "$COMMIT_SHA" | tail -n 1 | tr -d '\r')"
+CHANGED_FILES_B64="$(printf '%s' "$CHANGED_FILES" | base64 -w 0)"
+SHORTSTAT_B64="$(printf '%s' "$SHORTSTAT" | base64 -w 0)"
 
 # Skip if this commit was already rewritten by this workflow.
 if [[ "$CURRENT_MSG" == *"[copilot-commit]"* ]]; then
@@ -23,6 +27,8 @@ git show --patch --unified=2 --no-color --format=fuller "$COMMIT_SHA" | head -c 
   echo "skip=false"
   echo "commit_sha=${COMMIT_SHA}"
   echo "current_subject_b64=${CURRENT_SUBJECT_B64}"
+  echo "changed_files_b64=${CHANGED_FILES_B64}"
+  echo "shortstat_b64=${SHORTSTAT_B64}"
   echo "context_file=${CONTEXT_FILE}"
   echo "diff_file=${DIFF_FILE}"
 } > "$CONTEXT_FILE"

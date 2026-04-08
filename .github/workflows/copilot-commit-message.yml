@@ -2,10 +2,8 @@ name: Copilot Commit Message Rewriter
 
 on:
   push:
-    branches-ignore:
-      - main
-      - master
-      - develop
+    branches:
+      - "**" 
   workflow_dispatch:
 
 permissions:

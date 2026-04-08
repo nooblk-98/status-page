@@ -13,6 +13,37 @@ fi
 source "$CONTEXT_FILE"
 
 CURRENT_SUBJECT="$(printf '%s' "${current_subject_b64}" | base64 -d)"
+CHANGED_FILES="$(printf '%s' "${changed_files_b64:-}" | base64 -d 2>/dev/null || true)"
+SHORTSTAT="$(printf '%s' "${shortstat_b64:-}" | base64 -d 2>/dev/null || true)"
+
+is_weak_subject() {
+  local msg
+  msg="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | xargs)"
+  [[ -z "$msg" ]] && return 0
+  [[ ${#msg} -lt 12 ]] && return 0
+  [[ "$msg" =~ ^(update|updates|fix|fixes|change|changes|wip|temp|test|commit|done|misc)$ ]] && return 0
+  return 1
+}
+
+build_fallback_message() {
+  local file_count
+  file_count="$(printf '%s\n' "$CHANGED_FILES" | sed '/^$/d' | wc -l | xargs)"
+
+  {
+    echo "chore: refine repository changes and automation scripts"
+    echo
+    echo "- Rewrite commit details from actual file-level changes"
+    if [[ -n "$SHORTSTAT" ]]; then
+      echo "- Diff summary: $SHORTSTAT"
+    fi
+    if [[ -n "$CHANGED_FILES" ]]; then
+      echo "- Updated files (${file_count}):"
+      printf '%s\n' "$CHANGED_FILES" | sed 's/^/-   /'
+    fi
+    echo
+    echo "[copilot-commit]"
+  } > "$OUTPUT_FILE"
+}
 
 if [[ "${skip}" == "true" ]]; then
   echo "skip=true" > /tmp/commit-rewrite-result.env
@@ -21,14 +52,7 @@ fi
 
 if [[ -z "${COPILOT_TOKEN:-}" ]]; then
   echo "Copilot token not configured. Falling back to deterministic template."
-  {
-    echo "chore: update code based on latest changes"
-    echo
-    echo "- Update project files in this commit"
-    echo "- Align implementation with current diff"
-    echo
-    echo "[copilot-commit]"
-  } > "$OUTPUT_FILE"
+  build_fallback_message
 
   echo "skip=false" > /tmp/commit-rewrite-result.env
   echo "generated_message_file=${OUTPUT_FILE}" >> /tmp/commit-rewrite-result.env
@@ -38,6 +62,8 @@ fi
 DIFF_CONTENT="$(cat "$DIFF_FILE")"
 PAYLOAD="$(jq -n \
   --arg subject "${CURRENT_SUBJECT}" \
+  --arg files "${CHANGED_FILES}" \
+  --arg stat "${SHORTSTAT}" \
   --arg diff "$DIFF_CONTENT" \
   '{
     model: "gpt-4o",
@@ -46,11 +72,11 @@ PAYLOAD="$(jq -n \
     messages: [
       {
         role: "system",
-        content: "You write high quality git commit messages. Return only a commit message with this format: first line is a concise conventional-commit style subject under 72 chars, then a blank line, then 3-6 bullet points describing real code changes. Do not include markdown fences. Do not invent changes. End with [copilot-commit]."
+        content: "You write high quality git commit messages. Return only a commit message with this format: first line is a clear conventional-commit subject (NOT generic words like update/fix/changes) under 72 chars, then a blank line, then 3-6 bullet points describing concrete changes from the diff and files. Do not include markdown fences. Do not invent changes. End with [copilot-commit]."
       },
       {
         role: "user",
-        content: ("Current subject: " + $subject + "\\n\\nGit diff:\\n" + $diff)
+        content: ("Current subject: " + $subject + "\\nShort stat: " + $stat + "\\nChanged files:\\n" + $files + "\\n\\nGit diff:\\n" + $diff)
       }
     ]
   }')"
@@ -70,7 +96,14 @@ fi
 
 # Strip accidental markdown fences if present.
 CLEAN_MSG="$(printf '%s\n' "$RAW_MSG" | sed '1s/^```[a-zA-Z]*$//' | sed '$s/^```$//')"
-printf '%s\n' "$CLEAN_MSG" > "$OUTPUT_FILE"
+
+NEW_SUBJECT="$(printf '%s' "$CLEAN_MSG" | head -n 1 | tr -d '\r')"
+if is_weak_subject "$NEW_SUBJECT"; then
+  echo "Copilot returned weak subject ('$NEW_SUBJECT'). Using deterministic fallback."
+  build_fallback_message
+else
+  printf '%s\n' "$CLEAN_MSG" > "$OUTPUT_FILE"
+fi
 
 echo "skip=false" > /tmp/commit-rewrite-result.env
 echo "generated_message_file=${OUTPUT_FILE}" >> /tmp/commit-rewrite-result.env
