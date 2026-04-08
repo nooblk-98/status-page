@@ -48,6 +48,7 @@ WEAK_SUBJECT_RE = re.compile(
     r"(?:\s+[a-z0-9]+){0,2}$",
     re.IGNORECASE,
 )
+CI_PREFIX_RE = re.compile(r"^ci(?:\([^)]+\))?!?:\s*", re.IGNORECASE)
 
 
 @dataclass
@@ -92,6 +93,9 @@ def extract_subject_core(subject: str) -> str:
 
 
 def is_weak_subject(subject: str) -> bool:
+    if CI_PREFIX_RE.match(normalize_space(subject)):
+        return True
+
     core = extract_subject_core(subject)
     if not core:
         return True
@@ -191,7 +195,7 @@ def infer_fallback_subject(files: list[str]) -> str:
     if docs_only:
         subject = "docs: expand documentation details for recent changes"
     elif has_ci:
-        subject = "ci: refine automation to enforce better commit messages"
+        subject = "Refine automation to enforce better commit messages"
     elif has_tests:
         subject = "test: improve test coverage for recent code updates"
     elif has_app_code:
@@ -235,12 +239,27 @@ def strip_fences(text: str) -> str:
     return value.strip()
 
 
+def strip_ci_prefix_from_message(message: str) -> str:
+    lines = message.splitlines()
+    if not lines:
+        return message
+
+    subject = lines[0].strip()
+    cleaned_subject = CI_PREFIX_RE.sub("", subject).strip()
+    if cleaned_subject:
+        lines[0] = cleaned_subject
+
+    return "\n".join(lines)
+
+
 def validate_generated_message(message: str) -> bool:
     lines = [line.rstrip() for line in message.splitlines()]
     if not lines:
         return False
 
     subject = lines[0].strip()
+    if CI_PREFIX_RE.match(subject):
+        return False
     if is_weak_subject(subject):
         return False
     if len(subject) > 72:
@@ -265,8 +284,9 @@ def call_copilot(context: CommitContext, reason: str, token: str) -> str | None:
                 "role": "system",
                 "content": (
                     "You write high-quality git commit messages. Return only commit message text. "
-                    "Format: first line is a strong conventional-commit subject under 72 chars, "
+                    "Format: first line is a clear, specific subject under 72 chars, "
                     "then a blank line, then 3-6 bullet points beginning with '- '. "
+                    "Do not start the subject with 'ci:'. "
                     "Use only real changes from provided diff/files and do not invent facts. "
                     f"End with '{MARKER}' on its own line."
                 ),
@@ -325,6 +345,7 @@ def call_copilot(context: CommitContext, reason: str, token: str) -> str | None:
         return None
 
     cleaned = strip_fences(content)
+    cleaned = strip_ci_prefix_from_message(cleaned)
     if MARKER not in cleaned:
         cleaned = f"{cleaned.rstrip()}\n\n{MARKER}"
     cleaned = cleaned.strip() + "\n"
