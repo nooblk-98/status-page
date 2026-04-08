@@ -414,13 +414,13 @@ def main() -> int:
             return 0
 
         print(f"Commit message rewrite required ({reason}).")
-        token = os.getenv("COPILOT_TOKEN", "").strip()
+        token = os.getenv("COPILOT_TOKEN", "").strip() or os.getenv("GITHUB_TOKEN", "").strip()
 
         rewritten = None
         if token:
             rewritten = call_copilot(context, reason=reason, token=token)
         else:
-            print("COPILOT_TOKEN is missing; using deterministic fallback message.")
+            print("No Copilot API token found (COPILOT_TOKEN/GITHUB_TOKEN); using deterministic fallback message.")
 
         if rewritten is None:
             rewritten = build_fallback_message(context, reason=reason)

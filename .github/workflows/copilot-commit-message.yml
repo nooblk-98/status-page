@@ -29,9 +29,19 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Copilot CLI
+        uses: actions/setup-copilot@v0
+        with:
+          version: "latest"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Copilot CLI installation
+        run: copilot --version
+
       - name: Rewrite weak/simple commit message and push
         env:
           COPILOT_TOKEN: ${{ secrets.COPILOT_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_USER_NAME: ${{ vars.COMMIT_USER_NAME }}
           COMMIT_USER_EMAIL: ${{ secrets.COMMIT_USER_EMAIL }}
         run: python3 .github/scripts/commit/rewrite_commit_message.py
