@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  install setup-copilot:
+  install-setup-copilot:
     runs-on: ubuntu-latest
     
     steps:
