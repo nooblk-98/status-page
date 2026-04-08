@@ -1,0 +1,46 @@
+name: Copilot Commit Message Rewriter
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite-commit-message:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Set up Copilot CLI
+        uses: actions/setup-copilot@v0
+        with:
+          version: "latest"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Copilot CLI installation
+        run: copilot --version
+
+      - name: Prepare commit context
+        run: bash .github/scripts/commit/01_prepare_context.sh
+
+      - name: Generate detailed commit message with Copilot
+        env:
+          COPILOT_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: bash .github/scripts/commit/02_generate_message.sh
+
+      - name: Rewrite commit message and push
+        env:
+          COMMIT_USER_NAME: ${{ vars.COMMIT_USER_NAME }}
+          COMMIT_USER_EMAIL: ${{ secrets.COMMIT_USER_EMAIL }}
+        run: bash .github/scripts/commit/03_rewrite_and_push.sh
