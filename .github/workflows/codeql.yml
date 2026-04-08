@@ -1,0 +1,70 @@
+name: CodeQL + Copilot Autofix
+
+# CodeQL scans code for security vulnerabilities and quality issues.
+# When issues are found, GitHub Copilot Autofix automatically drafts
+# a fix pull request inside the Security → Code Scanning tab.
+#
+# Prerequisites:
+#   - Enable "Copilot Autofix for code scanning" in:
+#     Repo Settings → Code security → Copilot Autofix
+#   - GitHub Advanced Security must be enabled (free on public repos)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+  schedule:
+    # Run a full scan every Monday at midnight UTC
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  codeql-analyze:
+    name: CodeQL Security & Quality Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      # Required for uploading SARIF results
+      security-events: write
+      # Required for private repos
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - javascript-typescript
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Use the security-and-quality query suite for broader bug detection
+          queries: security-and-quality
+          # Copilot Autofix will use these results to draft fix PRs
+          config: |
+            query-filters:
+              - exclude:
+                  tags contain: experimental
+
+      - name: Auto-build (detects Node.js automatically)
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          # Upload results so Copilot Autofix can process them
+          upload: always
