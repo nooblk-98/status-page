@@ -1,0 +1,30 @@
+name: Auto Release Notes
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+
+permissions:
+  contents: write
+
+jobs:
+  install setup-copilot:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Copilot CLI
+        uses: actions/setup-copilot@v0
+        with:
+          version: "latest"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Copilot CLI installation
+        run: copilot --version
