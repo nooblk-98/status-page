@@ -31,8 +31,23 @@ jobs:
       - name: Verify Copilot CLI installation
         run: copilot --version
 
-      - name: GH Release Notes
+      - name: Prepare Release Context
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           RELEASE_TARGET: ${{ github.event.release.target_commitish }}
-        run: bash .github/scripts/gh-release-notes.sh
+          COPILOT_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: bash .github/scripts/release/01_prepare_context.sh
+
+      - name: Build Change Summary
+        run: bash .github/scripts/release/02_build_change_summary.sh
+
+      - name: Generate Release Notes
+        run: bash .github/scripts/release/03_generate_release_notes.sh
+
+      - name: Generate Release Title
+        env:
+          COPILOT_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: bash .github/scripts/release/04_generate_release_title.sh
+
+      - name: Update Release
+        run: bash .github/scripts/release/05_update_release.sh
