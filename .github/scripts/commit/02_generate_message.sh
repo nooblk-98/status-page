@@ -22,17 +22,42 @@ is_weak_subject() {
   [[ -z "$msg" ]] && return 0
   [[ ${#msg} -lt 12 ]] && return 0
   [[ "$msg" =~ ^(update|updates|fix|fixes|change|changes|wip|temp|test|commit|done|misc)$ ]] && return 0
+  [[ "$msg" == "chore: refine repository changes and automation scripts" ]] && return 0
   return 1
 }
 
 build_fallback_message() {
   local file_count
+  local first_file
+  local scope
+  local subject
+
   file_count="$(printf '%s\n' "$CHANGED_FILES" | sed '/^$/d' | wc -l | xargs)"
+  first_file="$(printf '%s\n' "$CHANGED_FILES" | sed '/^$/d' | head -n 1)"
+
+  if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(README\.md|docs/|.*\.md$)'; then
+    scope="docs"
+    subject="docs: update documentation for recent changes"
+  elif printf '%s\n' "$CHANGED_FILES" | grep -Eq '^\.github/'; then
+    scope="ci"
+    subject="ci: improve GitHub Actions automation scripts"
+  elif printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(server/|public/|config\.js)'; then
+    scope="app"
+    subject="feat: update ${scope} logic for latest code changes"
+  else
+    subject="chore: update project files with scoped improvements"
+  fi
+
+  if [[ -n "$first_file" ]]; then
+    if [[ ${#first_file} -le 32 ]]; then
+      subject="${subject} (${first_file})"
+    fi
+  fi
 
   {
-    echo "chore: refine repository changes and automation scripts"
+    echo "$subject"
     echo
-    echo "- Rewrite commit details from actual file-level changes"
+    echo "- Improve commit clarity using real file-level changes"
     if [[ -n "$SHORTSTAT" ]]; then
       echo "- Diff summary: $SHORTSTAT"
     fi
