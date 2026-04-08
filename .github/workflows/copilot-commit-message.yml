@@ -3,7 +3,7 @@ name: Copilot Commit Message Rewriter
 on:
   push:
     branches:
-      - "**" 
+      - "**"
   workflow_dispatch:
 
 permissions:
