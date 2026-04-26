@@ -1,60 +1,24 @@
-name: Generate Release Notes
+name: Auto Release Notes
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: "Release tag to generate notes for"
-        required: true
-        type: string
-
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
+  release:
+    types: [created]
 
 permissions:
   contents: write
-  pull-requests: read
 
 jobs:
   release-notes:
-    name: Generate Release Notes
     runs-on: ubuntu-latest
-
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.merged == true
-      )
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Determine release tag
-        id: meta
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "release_tag=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "release_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Validate release tag
-        run: |
-          if [ -z "${{ steps.meta.outputs.release_tag }}" ]; then
-            echo "No release tag found. Please create a tag first or run manually with tag_name."
-            exit 1
-          fi
-
-      - name: Generate release notes
+      - name: Generate and update release notes
         uses: nooblk-98/copilot-release-notes-action@v1.1.6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           copilot_model: gpt-4o
-          tag_name: ${{ steps.meta.outputs.release_tag }}
+          tag_name: ${{ github.event.release.tag_name }}
+          target_commitish: ${{ github.event.release.target_commitish }}
