@@ -403,6 +403,7 @@ function setActiveRange(range) {
             (range.type === "hours" && btnHours === range.value) ||
             (range.type === "days" && btnDays === range.value);
         btn.classList.toggle("is-active", isActive);
+        btn.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
 }
 
