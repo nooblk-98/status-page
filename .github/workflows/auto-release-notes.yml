@@ -1,53 +1,60 @@
-name: Auto Release Notes
+name: Generate Release Notes
 
 on:
-  release:
-    types:
-      - created
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag to generate notes for"
+        required: true
+        type: string
 
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
-  install-setup-copilot:
+  release-notes:
+    name: Generate Release Notes
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.merged == true
+      )
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Copilot CLI
-        uses: actions/setup-copilot@v0
+      - name: Determine release tag
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "release_tag=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate release tag
+        run: |
+          if [ -z "${{ steps.meta.outputs.release_tag }}" ]; then
+            echo "No release tag found. Please create a tag first or run manually with tag_name."
+            exit 1
+          fi
+
+      - name: Generate release notes
+        uses: nooblk-98/copilot-release-notes-action@v1.1.6
         with:
-          version: "latest"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify Copilot CLI installation
-        run: copilot --version
-
-      - name: Prepare Release Context
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          RELEASE_TARGET: ${{ github.event.release.target_commitish }}
-          COPILOT_TOKEN: ${{ secrets.COPILOT_PAT }}
-        run: bash .github/scripts/release/01_prepare_context.sh
-
-      - name: Build Change Summary
-        run: bash .github/scripts/release/02_build_change_summary.sh
-
-      - name: Generate Release Notes
-        run: bash .github/scripts/release/03_generate_release_notes.sh
-
-      - name: Generate Release Title
-        env:
-          COPILOT_TOKEN: ${{ secrets.COPILOT_PAT }}
-        run: bash .github/scripts/release/04_generate_release_title.sh
-
-      - name: Update Release
-        run: bash .github/scripts/release/05_update_release.sh
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          copilot_model: gpt-4o
+          tag_name: ${{ steps.meta.outputs.release_tag }}
