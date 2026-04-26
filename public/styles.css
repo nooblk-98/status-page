@@ -321,6 +321,20 @@ body[data-theme="light"] .bg {
 .site-card {
   display: grid;
   gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card:focus-visible,
+.seg-btn:focus-visible,
+.theme-toggle:focus-visible,
+.alert-toggle:focus-visible,
+.back-btn:focus-visible,
+.back-link:focus-visible,
+.alert-read:focus-visible,
+.search-input:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 4px;
 }
 
 .site-header {

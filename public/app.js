@@ -316,23 +316,9 @@ function updateStatusPill(pill, entry) {
 }
 
 function renderSiteCard({ site, summary, latest, checks }, range) {
-  const card = document.createElement("div");
+  const card = document.createElement("a");
   card.className = "card site-card";
-  card.style.cursor = "pointer";
-  card.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
-
-  // Add click handler to navigate to monitor detail page
-  card.addEventListener("click", () => {
-    window.location.href = `monitor.html?id=${encodeURIComponent(site.id)}`;
-  });
-
-  // Add hover effect
-  card.addEventListener("mouseenter", () => {
-    card.style.transform = "translateY(-2px)";
-  });
-  card.addEventListener("mouseleave", () => {
-    card.style.transform = "translateY(0)";
-  });
+  card.href = `monitor.html?id=${encodeURIComponent(site.id)}`;
 
   const header = document.createElement("div");
   header.className = "site-header";
@@ -415,6 +401,7 @@ function setActiveRange(range) {
       (range.type === "hours" && btnHours === range.value) ||
       (range.type === "days" && btnDays === range.value);
     btn.classList.toggle("is-active", isActive);
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
 }
 
