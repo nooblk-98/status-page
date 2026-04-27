@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -18,35 +18,52 @@ interface TimelineProps {
 export function Timeline({ checks, range }: TimelineProps) {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: React.ReactNode } | null>(null);
 
-  const rangeToMs = (r: { type: string; value: number }) => {
-    if (r.type === "minutes") return r.value * 60 * 1000;
-    if (r.type === "hours") return r.value * 60 * 60 * 1000;
-    return r.value * 24 * 60 * 60 * 1000;
-  };
+  const buckets = useMemo(() => {
+    const rangeToMs = (r: { type: string; value: number }) => {
+      if (r.type === "minutes") return r.value * 60 * 1000;
+      if (r.type === "hours") return r.value * 60 * 60 * 1000;
+      return r.value * 24 * 60 * 60 * 1000;
+    };
 
-  const rangeSegments = (r: { type: string; value: number }) => {
-    if (r.type === "minutes") return 60;
-    if (r.type === "hours") return 24;
-    return r.value;
-  };
+    const rangeSegments = (r: { type: string; value: number }) => {
+      if (r.type === "minutes") return 60;
+      if (r.type === "hours") return 24;
+      return r.value;
+    };
 
-  const rangeMs = rangeToMs(range);
-  const segments = rangeSegments(range);
-  const now = Date.now();
-  const bucketMs = rangeMs / segments;
+    const rangeMs = rangeToMs(range);
+    const segments = rangeSegments(range);
+    const now = Date.now();
+    const bucketMs = rangeMs / segments;
 
-  const buckets = Array.from({ length: segments }, (_, i) => {
-    const bucketEnd = now - (segments - 1 - i) * bucketMs;
-    const bucketStart = bucketEnd - bucketMs;
-    const bucketChecks = checks.filter(c => c.ts >= bucketStart && c.ts < bucketEnd);
+    const result = Array.from({ length: segments }, (_, i) => {
+      const bucketEnd = now - (segments - 1 - i) * bucketMs;
+      const bucketStart = bucketEnd - bucketMs;
+      return { start: bucketStart, end: bucketEnd, status: "idle" as "idle" | "good" | "bad", hasBad: false, hasGood: false };
+    });
 
-    let status: "idle" | "good" | "bad" = "idle";
-    if (bucketChecks.length > 0) {
-      status = bucketChecks.every(c => c.ok) ? "good" : "bad";
+    // Single pass over checks to fill buckets
+    for (const check of checks) {
+      const diff = now - check.ts;
+      if (diff < 0 || diff >= rangeMs) continue;
+
+      const bucketIdx = segments - 1 - Math.floor(diff / bucketMs);
+      if (bucketIdx >= 0 && bucketIdx < segments) {
+        if (check.ok) {
+          result[bucketIdx].hasGood = true;
+        } else {
+          result[bucketIdx].hasBad = true;
+        }
+      }
     }
 
-    return { start: bucketStart, end: bucketEnd, status, checks: bucketChecks };
-  });
+    return result.map(b => ({
+      ...b,
+      status: b.hasBad ? "bad" : b.hasGood ? "good" : "idle"
+    }));
+  }, [checks, range]);
+
+  const now = useMemo(() => Date.now(), []);
 
   return (
     <div className="space-y-2">
@@ -58,7 +75,7 @@ export function Timeline({ checks, range }: TimelineProps) {
               "flex-1 rounded-sm transition-colors",
               bucket.status === "good" ? "bg-emerald-500" :
               bucket.status === "bad" ? "bg-rose-500" :
-              "bg-gray-200 dark:bg-gray-800"
+              "bg-gray-200 dark:bg-zinc-800"
             )}
             onMouseEnter={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();

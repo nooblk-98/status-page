@@ -5,11 +5,13 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { ArrowLeft, Moon, Activity, CheckCircle } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Activity, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function Alerts() {
+  const { theme, toggleTheme } = useTheme();
   const [sites, setSites] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [lastRead, setLastRead] = useState<number>(0);
@@ -77,7 +79,7 @@ export default function Alerts() {
             <Activity className="text-indigo-600" />
             <span className="font-bold text-xl">Status Page</span>
           </div>
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-500">System Alerts</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted">System Alerts</p>
           <h1 className="text-4xl font-bold tracking-tight">Recent Downtime</h1>
         </div>
         <div className="flex items-center gap-3">
@@ -87,8 +89,8 @@ export default function Alerts() {
               Back to Dashboard
             </Button>
           </Link>
-          <Button variant="ghost" size="sm">
-            <Moon size={16} />
+          <Button variant="ghost" size="sm" onClick={toggleTheme}>
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
           <Button
             variant="outline"
@@ -105,7 +107,7 @@ export default function Alerts() {
 
       <div className="space-y-4">
         {alerts.length === 0 ? (
-          <div className="text-center p-12 text-gray-500">No downtime alerts recorded in the last 30 days.</div>
+          <div className="text-center p-12 text-muted">No downtime alerts recorded in the last 30 days.</div>
         ) : (
           alerts.map((alert, i) => (
             <Card key={i} className={cn(
@@ -115,7 +117,7 @@ export default function Alerts() {
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="space-y-1">
                   <h3 className="font-bold text-lg">{alert.site.name}</h3>
-                  <p className="text-sm text-gray-500">{alert.site.url}</p>
+                  <p className="text-sm text-muted">{alert.site.url}</p>
                 </div>
                 {alert.last.error && (
                   <Badge variant="error" className="h-fit">
@@ -123,19 +125,19 @@ export default function Alerts() {
                   </Badge>
                 )}
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 mt-6 border-top border-gray-100 dark:border-gray-800">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 mt-6 border-t border-[var(--card-border)]">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Time</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">Time</span>
                   <span className="font-semibold">{format(alert.end, "MMM d, HH:mm:ss")}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Duration</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">Duration</span>
                   <span className="font-semibold">
                     {Math.round((alert.end - alert.start) / 60000)}m
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Status Code</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">Status Code</span>
                   <span className="font-semibold">{alert.last.status_code || "--"}</span>
                 </div>
               </div>
@@ -144,7 +146,7 @@ export default function Alerts() {
         )}
       </div>
 
-      <footer className="text-center text-sm text-gray-500 py-8">
+      <footer className="text-center text-sm text-muted py-8">
         Developed by <a href="https://github.com/nooblk-98" className="font-bold hover:text-indigo-600">nooblk</a>
       </footer>
     </main>
