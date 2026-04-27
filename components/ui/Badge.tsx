@@ -11,7 +11,7 @@ export function Badge({ children, variant = "neutral", className }: BadgeProps) 
     success: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     error: "bg-rose-500/10 text-rose-500 border-rose-500/20",
     warning: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    neutral: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+    neutral: "bg-[var(--muted)]/10 text-[var(--muted)] border-[var(--muted)]/20",
   };
 
   return (
