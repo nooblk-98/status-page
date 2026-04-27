@@ -25,7 +25,7 @@ export function NotificationDropdown() {
   const fetchNotifications = useCallback(async () => {
     try {
       // Fetch dashboard data for last 24 hours to find recent events
-      const res = await fetch("/api/dashboard?days=1");
+      const res = await fetch("/api/dashboard?days=7");
       const result = await res.json();
       if (!result.data) return;
 
@@ -61,8 +61,9 @@ export function NotificationDropdown() {
       });
 
       // Sort by timestamp descending
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
       const sorted = newNotifications
-        .filter(n => n.timestamp > clearedAt)
+        .filter(n => n.timestamp > clearedAt && n.timestamp > oneDayAgo)
         .sort((a, b) => b.timestamp - a.timestamp);
 
       setNotifications(sorted);
