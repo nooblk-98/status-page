@@ -15,10 +15,10 @@
   <main class="shell">
     <header class="hero">
       <div>
-        <div class="brand">
+        <a href="index.html" class="brand">
           <img src="images/logo.svg" alt="Status Page logo" />
           <span>Status Page</span>
-        </div>
+        </a>
         <p class="eyebrow">Status Console</p>
         <h1>Uptime you can trust</h1>
         <p class="sub">Simple Modern looking Uptime Monitor.</p>
@@ -29,7 +29,7 @@
           <span class="theme-icon" aria-hidden="true">🌙</span>
           <span class="theme-label">Dark</span>
         </button>
-        <div class="badge" id="liveBadge">
+        <div class="badge" id="liveBadge" aria-live="polite">
           <span class="dot" id="liveDot"></span>
           <span id="liveText">Idle</span>
         </div>
@@ -49,8 +49,8 @@
       <div class="field">
         <label for="searchInput">Search monitors</label>
         <div class="search-wrap">
-          <input class="search-input" id="searchInput" type="search" placeholder="Search by name or URL" autocomplete="off" />
-          <button class="search-clear" id="searchClear" type="button" aria-label="Clear search">&times;</button>
+          <input class="search-input" id="searchInput" type="search" placeholder="Search by name or URL (Press '/' to focus)" autocomplete="off" />
+          <button class="search-clear" id="searchClear" type="button" aria-label="Clear search" style="display: none">&times;</button>
         </div>
         <div class="search-suggestions" id="searchSuggestions"></div>
       </div>

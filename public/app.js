@@ -605,18 +605,45 @@ window.addEventListener("load", async () => {
   startRefresh();
 });
 
+// Global shortcut for focusing search
+window.addEventListener("keydown", (e) => {
+  if (!searchInput) return;
+  if (e.key === "/" && document.activeElement !== searchInput) {
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+    e.preventDefault();
+    searchInput.focus();
+  }
+});
+
 if (searchInput) {
   searchInput.addEventListener("input", (event) => {
     searchQuery = event.target.value || "";
+    if (searchClear) {
+      searchClear.style.display = searchQuery ? "block" : "none";
+    }
     buildSuggestions(searchQuery);
     refreshAll();
+  });
+
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (searchQuery) {
+        searchClear.click();
+      } else {
+        searchInput.blur();
+      }
+    }
   });
 }
 
 if (searchClear) {
   searchClear.addEventListener("click", () => {
     searchQuery = "";
-    if (searchInput) searchInput.value = "";
+    if (searchInput) {
+      searchInput.value = "";
+      searchInput.focus();
+    }
+    searchClear.style.display = "none";
     if (searchSuggestions) {
       searchSuggestions.classList.remove("is-open");
       searchSuggestions.innerHTML = "";

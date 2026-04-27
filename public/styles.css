@@ -97,6 +97,7 @@ body[data-theme="light"] .bg {
   letter-spacing: -0.01em;
   font-size: 1.1rem;
   color: var(--text);
+  text-decoration: none;
 }
 
 .brand img {
