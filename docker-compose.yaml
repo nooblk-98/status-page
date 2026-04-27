@@ -2,8 +2,8 @@ services:
   status-page:
     build: .
     container_name: status-page
-    ports:
-      - "8080:3000"
+    # ports:
+    #   - "8080:3000"
     volumes:
       - /opt/uptime/data:/app/data
     environment:
