@@ -1,7 +1,10 @@
-const DEFAULT_INTERVAL = 60;
-const { sendAlert } = require("./notification");
+import { SiteConfig } from "@/lib/config";
+import { dbOps } from "@/lib/db";
+import { sendAlert } from "@/features/notifications/server/notifications";
 
-async function pingSite(site, db) {
+const DEFAULT_INTERVAL = 60;
+
+async function pingSite(site: SiteConfig) {
   const timeoutMs = site.timeoutMs || 8000;
 
   async function attempt() {
@@ -9,9 +12,9 @@ async function pingSite(site, db) {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const started = Date.now();
     let ok = false;
-    let latency = null;
-    let statusCode = null;
-    let error = null;
+    let latency: number | null = null;
+    let statusCode: number | null = null;
+    let error: string | null = null;
 
     try {
       const response = await fetch(site.url, {
@@ -22,7 +25,7 @@ async function pingSite(site, db) {
       statusCode = response.status;
       ok = response.ok;
       latency = Date.now() - started;
-    } catch (err) {
+    } catch (err: any) {
       error = err.name === "AbortError" ? "Timeout" : err.message;
       ok = false;
     } finally {
@@ -33,7 +36,7 @@ async function pingSite(site, db) {
   }
 
   // Get previous state
-  const previous = await db.getLatest(site.id);
+  const previous = await dbOps.getLatest(site.id);
 
   let result = await attempt();
   if (!result.ok) {
@@ -52,7 +55,7 @@ async function pingSite(site, db) {
     sendAlert(site, isUp, result.latency, result.error);
   }
 
-  await db.insertCheck({
+  await dbOps.insertCheck({
     siteId: site.id,
     ts: Date.now(),
     ok: result.ok,
@@ -62,18 +65,16 @@ async function pingSite(site, db) {
   });
 }
 
-function startMonitoring({ db, sites }) {
+export function startMonitoring(sites: SiteConfig[]) {
   sites.forEach((site) => {
     const intervalSeconds = site.intervalSeconds || DEFAULT_INTERVAL;
-    pingSite(site, db).catch((err) =>
+    pingSite(site).catch((err) =>
       console.error("Initial ping failed", err)
     );
     setInterval(() => {
-      pingSite(site, db).catch((err) =>
+      pingSite(site).catch((err) =>
         console.error("Ping failed", err)
       );
     }, intervalSeconds * 1000);
   });
 }
-
-module.exports = { startMonitoring };

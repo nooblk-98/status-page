@@ -1,7 +1,15 @@
-const intervalSeconds = 30;
-const timeoutMs = 8000;
+export const intervalSeconds = 30;
+export const timeoutMs = 8000;
 
-const sites = [
+export interface SiteConfig {
+  id: string;
+  name: string;
+  url: string;
+  intervalSeconds: number;
+  timeoutMs: number;
+}
+
+export const sites: SiteConfig[] = [
   {
     id: "nooblk-web",
     name: "NoobLk web",
@@ -45,5 +53,3 @@ const sites = [
     timeoutMs,
   },
 ];
-
-module.exports = { sites };

@@ -1,0 +1,95 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+interface Check {
+  ts: number;
+  ok: number;
+  error: string | null;
+}
+
+interface TimelineProps {
+  checks: Check[];
+  range: { type: string; value: number };
+}
+
+export function Timeline({ checks, range }: TimelineProps) {
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: React.ReactNode } | null>(null);
+
+  const rangeToMs = (r: { type: string; value: number }) => {
+    if (r.type === "minutes") return r.value * 60 * 1000;
+    if (r.type === "hours") return r.value * 60 * 60 * 1000;
+    return r.value * 24 * 60 * 60 * 1000;
+  };
+
+  const rangeSegments = (r: { type: string; value: number }) => {
+    if (r.type === "minutes") return 60;
+    if (r.type === "hours") return 24;
+    return r.value;
+  };
+
+  const rangeMs = rangeToMs(range);
+  const segments = rangeSegments(range);
+  const now = Date.now();
+  const bucketMs = rangeMs / segments;
+
+  const buckets = Array.from({ length: segments }, (_, i) => {
+    const bucketEnd = now - (segments - 1 - i) * bucketMs;
+    const bucketStart = bucketEnd - bucketMs;
+    const bucketChecks = checks.filter(c => c.ts >= bucketStart && c.ts < bucketEnd);
+
+    let status: "idle" | "good" | "bad" = "idle";
+    if (bucketChecks.length > 0) {
+      status = bucketChecks.every(c => c.ok) ? "good" : "bad";
+    }
+
+    return { start: bucketStart, end: bucketEnd, status, checks: bucketChecks };
+  });
+
+  return (
+    <div className="space-y-2">
+      <div className="flex h-6 gap-0.5">
+        {buckets.map((bucket, i) => (
+          <div
+            key={i}
+            className={cn(
+              "flex-1 rounded-sm transition-colors",
+              bucket.status === "good" ? "bg-emerald-500" :
+              bucket.status === "bad" ? "bg-rose-500" :
+              "bg-gray-200 dark:bg-gray-800"
+            )}
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setTooltip({
+                x: rect.left + rect.width / 2,
+                y: rect.top - 10,
+                content: (
+                  <div className="text-xs">
+                    <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
+                    <div>{format(bucket.start, "HH:mm")} - {format(bucket.end, "HH:mm")}</div>
+                  </div>
+                )
+              });
+            }}
+            onMouseLeave={() => setTooltip(null)}
+          />
+        ))}
+      </div>
+      <div className="flex justify-between text-[10px] uppercase tracking-wider text-gray-500">
+        <span>{range.value} {range.type} ago</span>
+        <span>{format(now, "MMMM d, yyyy")}</span>
+        <span>Now</span>
+      </div>
+      {tooltip && (
+        <div
+          className="fixed z-50 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-white shadow-lg pointer-events-none"
+          style={{ left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -100%)' }}
+        >
+          {tooltip.content}
+        </div>
+      )}
+    </div>
+  );
+}
