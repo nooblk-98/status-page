@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ArrowLeft, Moon, Sun, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
+import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
 
 export default function MonitorDetails({ params }: { params: Promise<{ id: string }> }) {
   const { theme, toggleTheme } = useTheme();
@@ -71,6 +72,7 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
               Back to Dashboard
             </Button>
           </Link>
+          <NotificationDropdown />
           <Button variant="ghost" size="sm" onClick={toggleTheme}>
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>

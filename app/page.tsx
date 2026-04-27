@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Timeline } from "@/features/status/components/Timeline";
 import Link from "next/link";
-import { Search, Bell, Moon, Sun, Activity } from "lucide-react";
+import { Search, Moon, Sun, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
+import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
 
 interface Site {
   id: string;
@@ -70,12 +71,7 @@ export default function Dashboard() {
           <p className="text-muted">Simple Modern looking Uptime Monitor.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/alerts">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Bell size={16} />
-              Alerts
-            </Button>
-          </Link>
+          <NotificationDropdown />
           <Button variant="ghost" size="sm" onClick={toggleTheme}>
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
