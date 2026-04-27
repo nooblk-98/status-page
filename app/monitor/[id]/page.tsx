@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Timeline } from "@/features/status/components/Timeline";
 import Link from "next/link";
-import { ArrowLeft, Moon, Activity } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function MonitorDetails({ params }: { params: Promise<{ id: string }> }) {
+  const { theme, toggleTheme } = useTheme();
   const { id } = use(params);
   const [site, setSite] = useState<any>(null);
   const [data, setData] = useState<any>(null);
@@ -58,9 +60,9 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
             <Activity className="text-indigo-600" />
             <span className="font-bold text-xl">Status Page</span>
           </div>
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Monitor Details</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted">Monitor Details</p>
           <h1 className="text-4xl font-bold tracking-tight">{site.name}</h1>
-          <p className="text-gray-500">{site.url}</p>
+          <p className="text-muted">{site.url}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/">
@@ -69,10 +71,10 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
               Back to Dashboard
             </Button>
           </Link>
-          <Button variant="ghost" size="sm">
-            <Moon size={16} />
+          <Button variant="ghost" size="sm" onClick={toggleTheme}>
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-gray-50 dark:bg-zinc-900">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
              <div className={cn("w-2 h-2 rounded-full", data?.latest?.ok ? "bg-emerald-500" : "bg-rose-500")} />
              <span className="text-xs font-medium">{data?.latest?.ok ? "Online" : "Loading"}</span>
           </div>
@@ -82,8 +84,8 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
       <Card className="w-fit">
         <div className="flex flex-col md:flex-row gap-6 items-end">
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">History window</label>
-            <div className="flex gap-1 bg-gray-100 dark:bg-zinc-800 p-1 rounded-lg w-fit">
+            <label className="text-xs font-bold uppercase tracking-wider text-muted">History window</label>
+            <div className="flex gap-1 bg-[var(--secondary-bg)] p-1 rounded-lg w-fit">
               {[
                 { type: "minutes", value: 60, label: "60 min" },
                 { type: "hours", value: 24, label: "24 hours" },
@@ -96,8 +98,8 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
                   className={cn(
                     "px-3 py-1 rounded-md text-sm font-medium transition-colors",
                     range.type === r.type && range.value === r.value
-                      ? "bg-white dark:bg-zinc-700 shadow-sm"
-                      : "text-gray-500 hover:text-gray-900"
+                      ? "bg-[var(--card-bg)] shadow-sm"
+                      : "text-muted hover:text-[var(--foreground)]"
                   )}
                 >
                   {r.label}
@@ -118,7 +120,7 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
           { label: "Interval", value: `${site.intervalSeconds}s` },
         ].map((stat, i) => (
           <Card key={i} className="p-4 space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">{stat.label}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">{stat.label}</span>
             <span className={cn("text-lg font-bold block", stat.color)}>{stat.value}</span>
           </Card>
         ))}
@@ -129,7 +131,7 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
         <Timeline checks={data?.checks || []} range={range} />
       </Card>
 
-      <footer className="text-center text-sm text-gray-500 py-8">
+      <footer className="text-center text-sm text-muted py-8">
         Developed by <a href="https://github.com/nooblk-98" className="font-bold hover:text-indigo-600">nooblk</a>
       </footer>
     </main>
