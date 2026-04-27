@@ -1,14 +1,40 @@
 name: Auto Release Notes
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.bump.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Bump patch version and create release
+        id: bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          latest=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          if [ -z "$latest" ]; then
+            new_tag="v1.0.0"
+          else
+            IFS='.' read -r major minor patch <<< "${latest#v}"
+            new_tag="v${major}.${minor}.$((patch + 1))"
+          fi
+          echo "tag_name=$new_tag" >> "$GITHUB_OUTPUT"
+          gh release create "$new_tag" --title "$new_tag" --draft=false --prerelease=false --target main
+
   release-notes:
+    needs: create-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -20,5 +46,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           copilot_model: gpt-4o
-          tag_name: ${{ github.event.release.tag_name }}
-          target_commitish: ${{ github.event.release.target_commitish }}
+          tag_name: ${{ needs.create-release.outputs.tag_name }}
+          target_commitish: main
