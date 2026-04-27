@@ -109,13 +109,45 @@ export const dbOps = {
   },
   async getSummary(siteId: string, days: number): Promise<Summary> {
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-    const rows = await all<{ ok: number }>(
-      "SELECT ok FROM checks WHERE site_id = ? AND ts >= ?",
+    const row = await get<{ total: number; okCount: number }>(
+      "SELECT COUNT(*) as total, SUM(ok) as okCount FROM checks WHERE site_id = ? AND ts >= ?",
       [siteId, cutoff]
     );
-    const total = rows.length;
-    const okCount = rows.filter((row) => row.ok).length;
+    const total = row?.total || 0;
+    const okCount = row?.okCount || 0;
     const percent = total ? Number(((okCount / total) * 100).toFixed(2)) : 0;
     return { total, okCount, percent };
   },
+  async getDashboardData(siteIds: string[], days: number) {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+
+    // Batch fetch summaries
+    const summaries = await all<{ site_id: string; total: number; okCount: number }>(
+      `SELECT site_id, COUNT(*) as total, SUM(ok) as okCount
+       FROM checks
+       WHERE site_id IN (${siteIds.map(() => "?").join(",")}) AND ts >= ?
+       GROUP BY site_id`,
+      [...siteIds, cutoff]
+    );
+
+    // Batch fetch latest status
+    const latests = await all<CheckEntry>(
+      `SELECT c1.* FROM checks c1
+       JOIN (SELECT site_id, MAX(ts) as max_ts FROM checks GROUP BY site_id) c2
+       ON c1.site_id = c2.site_id AND c1.ts = c2.max_ts
+       WHERE c1.site_id IN (${siteIds.map(() => "?").join(",")})`,
+      [...siteIds]
+    );
+
+    // Fetch checks for timeline (last 50 checks per site for simplicity or filter by cutoff)
+    const checks = await all<CheckEntry>(
+      `SELECT site_id, ts, ok, error
+       FROM checks
+       WHERE site_id IN (${siteIds.map(() => "?").join(",")}) AND ts >= ?
+       ORDER BY ts DESC`,
+      [...siteIds, cutoff]
+    );
+
+    return { summaries, latests, checks };
+  }
 };
