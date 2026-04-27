@@ -9,6 +9,14 @@
 
 ---
 
+## Preview
+
+![Dashboard](images/ui.png)
+
+![Alerts](images/ui2.png)
+
+---
+
 ## Quick Start
 
 ### Local Development
