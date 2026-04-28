@@ -85,7 +85,9 @@ export function Timeline({ checks, range }: TimelineProps) {
                 content: (
                   <div className="text-xs">
                     <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
-                    <div>{format(bucket.start, "HH:mm")} - {format(bucket.end, "HH:mm")}</div>
+                    <div>
+                      {range.type === "days" ? format(bucket.start, "MMM d, HH:mm") : format(bucket.start, "HH:mm")} - {format(bucket.end, "HH:mm")}
+                    </div>
                   </div>
                 )
               });

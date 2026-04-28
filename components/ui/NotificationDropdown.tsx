@@ -149,6 +149,7 @@ export function NotificationDropdown() {
             <button
               onClick={() => setIsOpen(false)}
               className="p-1 rounded-md hover:bg-[var(--secondary-bg)] text-muted transition-colors"
+              aria-label="Close notifications"
             >
               <X size={16} />
             </button>

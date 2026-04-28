@@ -72,7 +72,12 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <NotificationDropdown />
-          <Button variant="ghost" size="sm" onClick={toggleTheme}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
@@ -111,10 +116,11 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex-[2] space-y-2 w-full">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted">Search monitors</label>
+          <label htmlFor="search-monitors" className="text-xs font-bold uppercase tracking-wider text-muted">Search monitors</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} aria-hidden="true" />
             <input
+              id="search-monitors"
               type="text"
               placeholder="Search by name or URL"
               className="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--input-bg)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -134,63 +140,72 @@ export default function Dashboard() {
       </Card>
 
       <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity", loading && "opacity-50")}>
-        {filteredSiteData.map((data) => {
-          const { site } = data;
-          return (
-            <Link key={site.id} href={`/monitor/${site.id}`}>
-              <Card className="hover:border-indigo-500/50 transition-colors cursor-pointer space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-lg">{site.name}</h3>
-                    <p className="text-sm text-muted flex items-center gap-1">
-                      <span className="text-[10px] font-bold px-1 rounded bg-[var(--secondary-bg)] uppercase">
-                        {site.url.startsWith("https") ? "HTTPS" : "HTTP"}
+        {filteredSiteData.length > 0 ? (
+          filteredSiteData.map((data) => {
+            const { site } = data;
+            return (
+              <Link key={site.id} href={`/monitor/${site.id}`}>
+                <Card className="hover:border-indigo-500/50 transition-colors cursor-pointer space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg">{site.name}</h3>
+                      <p className="text-sm text-muted flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-1 rounded bg-[var(--secondary-bg)] uppercase">
+                          {site.url.startsWith("https") ? "HTTPS" : "HTTP"}
+                        </span>
+                        {site.url.replace(/^https?:\/\//, "")}
+                      </p>
+                    </div>
+                    {data?.latest && (
+                      <Badge variant={data.latest.ok ? "success" : "error"}>
+                        {data.latest.ok ? "Online" : "Down"}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2 py-2">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Last Checked</span>
+                      <span className="block text-xs font-semibold">
+                        {data?.latest ? new Date(data.latest.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--"}
                       </span>
-                      {site.url.replace(/^https?:\/\//, "")}
-                    </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Uptime</span>
+                      <span className="block text-xs font-semibold">
+                        {data?.summary ? `${data.summary.percent}%` : "--"}
+                      </span>
+                    </div>
+                     <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Checks</span>
+                      <span className="block text-xs font-semibold">
+                        {data?.summary ? data.summary.total : 0}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Latency</span>
+                      <span className={cn(
+                        "block text-sm font-bold",
+                        data?.latest?.latency_ms && data.latest.latency_ms < 200 ? "text-emerald-500" : "text-[var(--foreground)]"
+                      )}>
+                        {data?.latest?.latency_ms ?? "--"} ms
+                      </span>
+                    </div>
                   </div>
-                  {data?.latest && (
-                    <Badge variant={data.latest.ok ? "success" : "error"}>
-                      {data.latest.ok ? "Online" : "Down"}
-                    </Badge>
-                  )}
-                </div>
 
-                <div className="grid grid-cols-4 gap-2 py-2">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Last Checked</span>
-                    <span className="block text-xs font-semibold">
-                      {data?.latest ? new Date(data.latest.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--"}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Uptime</span>
-                    <span className="block text-xs font-semibold">
-                      {data?.summary ? `${data.summary.percent}%` : "--"}
-                    </span>
-                  </div>
-                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Checks</span>
-                    <span className="block text-xs font-semibold">
-                      {data?.summary ? data.summary.total : 0}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Latency</span>
-                    <span className={cn(
-                      "block text-sm font-bold",
-                      data?.latest?.latency_ms && data.latest.latency_ms < 200 ? "text-emerald-500" : "text-[var(--foreground)]"
-                    )}>
-                      {data?.latest?.latency_ms ?? "--"} ms
-                    </span>
-                  </div>
-                </div>
-
-                <Timeline checks={data?.checks || []} range={range} />
-              </Card>
-            </Link>
-          );
-        })}
+                  <Timeline checks={data?.checks || []} range={range} />
+                </Card>
+              </Link>
+            );
+          })
+        ) : !loading && (
+          <div className="col-span-full py-12 text-center">
+            <p className="text-lg font-medium text-muted">No monitors found matching &quot;{search}&quot;</p>
+            <Button variant="ghost" onClick={() => setSearch("")} className="mt-2 text-indigo-600">
+              Clear search
+            </Button>
+          </div>
+        )}
       </div>
 
       <footer className="text-center text-sm text-muted py-8">
