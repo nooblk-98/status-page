@@ -1,0 +1,23 @@
+{
+  "skill_name": "nextjs-structure",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm building a Next.js app with App Router. I need to add a 'products' feature with a page at /dashboard/products, an API route at /api/products, a form to create products, server actions to create/delete products, and Prisma queries to fetch them. Show me exactly what files to create and where they go, with the content of each file.",
+      "expected_output": "Creates files following the feature-based structure: app/(dashboard)/products/page.tsx (thin, imports from features/), features/products/actions.ts with 'use server', features/products/queries.ts, features/products/components/product-form.tsx, features/products/types.ts, features/products/validation.ts, app/api/products/route.ts. Uses @/ imports throughout.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Add a reusable data table component to my Next.js project. It should work across multiple features (users table, products table, orders table). Also add a feature-specific user-stats card that's only shown on the users page. Where do these go and what does the code look like?",
+      "expected_output": "DataTable goes in components/ui/data-table.tsx (reusable across features). UserStatsCard goes in features/users/components/user-stats-card.tsx (feature-specific). Demonstrates correct split between global components/ and feature components/.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "My Next.js project is getting messy. I have all my database queries and mutations directly inside my page.tsx and route.ts files. How should I refactor a /users page and /api/users route to follow a proper scalable structure? Show me the before and after.",
+      "expected_output": "Shows before (fat page.tsx with db calls) and after (thin page.tsx importing from features/users/queries.ts and features/users/actions.ts). API route delegates to features/users/queries.ts. All imports use @/ alias.",
+      "files": []
+    }
+  ]
+}
