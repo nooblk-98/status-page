@@ -111,10 +111,13 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex-[2] space-y-2 w-full">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted">Search monitors</label>
+          <label htmlFor="search-monitors" className="text-xs font-bold uppercase tracking-wider text-muted">
+            Search monitors
+          </label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
             <input
+              id="search-monitors"
               type="text"
               placeholder="Search by name or URL"
               className="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--input-bg)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
