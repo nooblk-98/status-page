@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell, Circle, CheckCircle2, XCircle, Trash2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
@@ -129,7 +130,7 @@ export function NotificationDropdown() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full hover:bg-[var(--secondary-bg)] transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        aria-label="View notifications"
+        aria-label={`View notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
       >
         <Bell size={20} className="text-[var(--foreground)]" />
         {unreadCount > 0 && (
@@ -149,6 +150,7 @@ export function NotificationDropdown() {
             <button
               onClick={() => setIsOpen(false)}
               className="p-1 rounded-md hover:bg-[var(--secondary-bg)] text-muted transition-colors"
+              aria-label="Close notifications"
             >
               <X size={16} />
             </button>
@@ -166,8 +168,10 @@ export function NotificationDropdown() {
             ) : (
               <div className="divide-y divide-[var(--card-border)]">
                 {notifications.map((n) => (
-                  <div
+                  <Link
                     key={n.id}
+                    href={`/monitor/${n.siteId}`}
+                    onClick={() => setIsOpen(false)}
                     className={cn(
                       "flex items-start gap-3 p-4 transition-colors hover:bg-[var(--secondary-bg)]",
                       n.timestamp > readAt && "bg-indigo-50/30 dark:bg-indigo-500/5"
@@ -201,7 +205,7 @@ export function NotificationDropdown() {
                         {formatDistanceToNow(n.timestamp, { addSuffix: true })}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
