@@ -65,6 +65,12 @@ export function Timeline({ checks, range }: TimelineProps) {
 
   const now = useMemo(() => Date.now(), []);
 
+  const formatBucketTime = (ts: number) => {
+    if (range.type === "minutes") return format(ts, "HH:mm:ss");
+    if (range.type === "hours") return format(ts, "HH:mm");
+    return format(ts, "MMM d, HH:mm");
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex h-6 gap-0.5">
@@ -85,7 +91,7 @@ export function Timeline({ checks, range }: TimelineProps) {
                 content: (
                   <div className="text-xs">
                     <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
-                    <div>{format(bucket.start, "HH:mm")} - {format(bucket.end, "HH:mm")}</div>
+                    <div>{formatBucketTime(bucket.start)} – {formatBucketTime(bucket.end)}</div>
                   </div>
                 )
               });
