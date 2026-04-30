@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Timeline } from "@/features/status/components/Timeline";
 import Link from "next/link";
-import { Search, Moon, Sun, Activity } from "lucide-react";
+import { Search, Moon, Sun, Activity, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
@@ -72,7 +72,12 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <NotificationDropdown />
-          <Button variant="ghost" size="sm" onClick={toggleTheme}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
@@ -120,10 +125,19 @@ export default function Dashboard() {
               id="search-monitors"
               type="text"
               placeholder="Search by name or URL"
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--input-bg)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-10 pr-10 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--input-bg)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-[var(--foreground)] transition-colors"
+                aria-label="Clear search"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
         <div className="flex gap-4 text-xs font-medium text-muted">
@@ -137,6 +151,20 @@ export default function Dashboard() {
       </Card>
 
       <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity", loading && "opacity-50")}>
+        {filteredSiteData.length === 0 && search && (
+          <div className="col-span-full py-16 flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-[var(--secondary-bg)] flex items-center justify-center">
+              <Search className="text-muted" size={32} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">No monitors found</h3>
+              <p className="text-sm text-muted">No results for &quot;{search}&quot;. Try a different term.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setSearch("")}>
+              Clear Search
+            </Button>
+          </div>
+        )}
         {filteredSiteData.map((data) => {
           const { site } = data;
           return (

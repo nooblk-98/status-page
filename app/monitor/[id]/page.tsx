@@ -73,7 +73,12 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
             </Button>
           </Link>
           <NotificationDropdown />
-          <Button variant="ghost" size="sm" onClick={toggleTheme}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
