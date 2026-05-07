@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Timeline } from "@/features/status/components/Timeline";
 import Link from "next/link";
-import { ArrowLeft, Moon, Sun, Activity } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Activity, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
+import { formatDistanceToNow } from "date-fns";
 
 export default function MonitorDetails({ params }: { params: Promise<{ id: string }> }) {
   const { theme, toggleTheme } = useTheme();
@@ -18,6 +19,7 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
   const [site, setSite] = useState<any>(null);
   const [data, setData] = useState<any>(null);
   const [range, setRange] = useState({ type: "minutes", value: 60 });
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch("/api/sites")
@@ -51,7 +53,21 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
     return () => clearInterval(timer);
   }, [site, range]);
 
-  if (!site) return <div className="p-8 text-center">Loading monitor details...</div>;
+  const copyToClipboard = () => {
+    if (!site?.url) return;
+    navigator.clipboard.writeText(site.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!site) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Activity className="text-indigo-600 animate-pulse" size={48} />
+        <p className="text-muted font-medium">Loading monitor details...</p>
+      </div>
+    </div>
+  );
 
   return (
     <main className="mx-auto max-w-6xl p-6 space-y-8">
@@ -63,7 +79,17 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
           </div>
           <p className="text-xs font-bold uppercase tracking-wider text-muted">Monitor Details</p>
           <h1 className="text-4xl font-bold tracking-tight">{site.name}</h1>
-          <p className="text-muted">{site.url}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-muted">{site.url}</p>
+            <button
+              onClick={copyToClipboard}
+              className="p-1 rounded-md hover:bg-[var(--secondary-bg)] text-muted hover:text-[var(--foreground)] transition-all active:scale-95"
+              title="Copy URL"
+              aria-label="Copy monitor URL"
+            >
+              {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/">
@@ -82,8 +108,14 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
-             <div className={cn("w-2 h-2 rounded-full", data?.latest?.ok ? "bg-emerald-500" : "bg-rose-500")} />
-             <span className="text-xs font-medium">{data?.latest?.ok ? "Online" : "Loading"}</span>
+             <div className={cn(
+               "w-2 h-2 rounded-full",
+               !data ? "bg-zinc-400" :
+               data.latest?.ok ? "bg-emerald-500 animate-pulse" : "bg-rose-500 animate-pulse"
+             )} />
+             <span className="text-xs font-medium">
+               {!data ? "Checking..." : data.latest?.ok ? "Online" : "Down"}
+             </span>
           </div>
         </div>
       </header>
@@ -119,9 +151,9 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { label: "Current Status", value: data?.latest?.ok ? "Online" : "Down", color: data?.latest?.ok ? "text-emerald-500" : "text-rose-500" },
+          { label: "Current Status", value: !data ? "Checking..." : data.latest?.ok ? "Online" : "Down", color: !data ? "text-muted" : data.latest?.ok ? "text-emerald-500" : "text-rose-500" },
           { label: "Uptime", value: data?.summary ? `${data.summary.percent}%` : "--" },
-          { label: "Last Checked", value: data?.latest ? new Date(data.latest.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--" },
+          { label: "Last Checked", value: data?.latest ? formatDistanceToNow(data.latest.ts, { addSuffix: true }) : "--" },
           { label: "Avg Latency", value: data?.checks ? `${(data.checks.filter((c:any)=>c.latency_ms).reduce((a:any,b:any)=>a+b.latency_ms,0)/(data.checks.filter((c:any)=>c.latency_ms).length||1)).toFixed(0)} ms` : "--" },
           { label: "Total Checks", value: data?.summary?.total || 0 },
           { label: "Interval", value: `${site.intervalSeconds}s` },

@@ -65,6 +65,11 @@ export function Timeline({ checks, range }: TimelineProps) {
 
   const now = useMemo(() => Date.now(), []);
 
+  const getBucketLabel = (bucket: any) => {
+    const statusText = bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data";
+    return `${statusText} from ${formatBucketTime(bucket.start)} to ${formatBucketTime(bucket.end)}`;
+  };
+
   const formatBucketTime = (ts: number) => {
     if (range.type === "minutes") return format(ts, "HH:mm:ss");
     if (range.type === "hours") return format(ts, "HH:mm");
@@ -74,31 +79,40 @@ export function Timeline({ checks, range }: TimelineProps) {
   return (
     <div className="space-y-2">
       <div className="flex h-6 gap-0.5">
-        {buckets.map((bucket, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex-1 rounded-sm transition-colors",
-              bucket.status === "good" ? "bg-emerald-500" :
-              bucket.status === "bad" ? "bg-rose-500" :
-              "bg-gray-200 dark:bg-zinc-800"
-            )}
-            onMouseEnter={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setTooltip({
-                x: rect.left + rect.width / 2,
-                y: rect.top - 10,
-                content: (
-                  <div className="text-xs">
-                    <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
-                    <div>{formatBucketTime(bucket.start)} – {formatBucketTime(bucket.end)}</div>
-                  </div>
-                )
-              });
-            }}
-            onMouseLeave={() => setTooltip(null)}
-          />
-        ))}
+        {buckets.map((bucket, i) => {
+          const handleShowTooltip = (el: HTMLElement) => {
+            const rect = el.getBoundingClientRect();
+            setTooltip({
+              x: rect.left + rect.width / 2,
+              y: rect.top - 10,
+              content: (
+                <div className="text-xs">
+                  <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
+                  <div>{formatBucketTime(bucket.start)} – {formatBucketTime(bucket.end)}</div>
+                </div>
+              )
+            });
+          };
+
+          return (
+            <div
+              key={i}
+              role="img"
+              aria-label={getBucketLabel(bucket)}
+              tabIndex={0}
+              className={cn(
+                "flex-1 rounded-sm transition-colors cursor-help focus:ring-2 focus:ring-indigo-500 focus:outline-none",
+                bucket.status === "good" ? "bg-emerald-500" :
+                bucket.status === "bad" ? "bg-rose-500" :
+                "bg-gray-200 dark:bg-zinc-800"
+              )}
+              onMouseEnter={(e) => handleShowTooltip(e.currentTarget)}
+              onMouseLeave={() => setTooltip(null)}
+              onFocus={(e) => handleShowTooltip(e.currentTarget)}
+              onBlur={() => setTooltip(null)}
+            />
+          );
+        })}
       </div>
       <div className="flex justify-between text-[10px] uppercase tracking-wider text-gray-500">
         <span>{range.value} {range.type} ago</span>

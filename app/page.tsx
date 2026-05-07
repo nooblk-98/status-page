@@ -10,6 +10,7 @@ import { Search, Moon, Sun, Activity, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
+import { formatDistanceToNow } from "date-fns";
 
 interface Site {
   id: string;
@@ -81,8 +82,15 @@ export default function Dashboard() {
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
-             <div className={cn("w-2 h-2 rounded-full animate-pulse", anyDown ? "bg-rose-500" : "bg-emerald-500")} />
-             <span className="text-xs font-medium">{anyDown ? "Issues detected" : "All systems normal"}</span>
+             <div className={cn(
+               "w-2 h-2 rounded-full",
+               loading && siteDataList.length === 0 ? "bg-zinc-400" :
+               anyDown ? "bg-rose-500 animate-pulse" : "bg-emerald-500 animate-pulse"
+             )} />
+             <span className="text-xs font-medium">
+               {loading && siteDataList.length === 0 ? "Checking systems..." :
+                anyDown ? "Issues detected" : "All systems normal"}
+             </span>
           </div>
         </div>
       </header>
@@ -191,7 +199,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Last Checked</span>
                     <span className="block text-xs font-semibold">
-                      {data?.latest ? new Date(data.latest.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--"}
+                      {data?.latest ? formatDistanceToNow(data.latest.ts, { addSuffix: true }) : "--"}
                     </span>
                   </div>
                   <div className="space-y-1">
