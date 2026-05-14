@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Timeline } from "@/features/status/components/Timeline";
 import Link from "next/link";
 import { Search, Moon, Sun, Activity, X } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
@@ -191,7 +192,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Last Checked</span>
                     <span className="block text-xs font-semibold">
-                      {data?.latest ? new Date(data.latest.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--"}
+                      {data?.latest ? formatDistanceToNow(data.latest.ts, { addSuffix: true }) : "--"}
                     </span>
                   </div>
                   <div className="space-y-1">

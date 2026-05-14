@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Timeline } from "@/features/status/components/Timeline";
 import Link from "next/link";
 import { ArrowLeft, Moon, Sun, Activity } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
@@ -121,7 +122,7 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
         {[
           { label: "Current Status", value: data?.latest?.ok ? "Online" : "Down", color: data?.latest?.ok ? "text-emerald-500" : "text-rose-500" },
           { label: "Uptime", value: data?.summary ? `${data.summary.percent}%` : "--" },
-          { label: "Last Checked", value: data?.latest ? new Date(data.latest.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--" },
+          { label: "Last Checked", value: data?.latest ? formatDistanceToNow(data.latest.ts, { addSuffix: true }) : "--" },
           { label: "Avg Latency", value: data?.checks ? `${(data.checks.filter((c:any)=>c.latency_ms).reduce((a:any,b:any)=>a+b.latency_ms,0)/(data.checks.filter((c:any)=>c.latency_ms).length||1)).toFixed(0)} ms` : "--" },
           { label: "Total Checks", value: data?.summary?.total || 0 },
           { label: "Interval", value: `${site.intervalSeconds}s` },
