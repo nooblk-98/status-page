@@ -10,6 +10,7 @@ import { Search, Moon, Sun, Activity, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 interface Site {
   id: string;
@@ -71,15 +72,19 @@ export default function Dashboard() {
           <p className="text-muted">Simple Modern looking Uptime Monitor.</p>
         </div>
         <div className="flex items-center gap-3">
-          <NotificationDropdown />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          </Button>
+          <Tooltip content="Notifications">
+            <NotificationDropdown />
+          </Tooltip>
+          <Tooltip content={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </Button>
+          </Tooltip>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
              <div className={cn("w-2 h-2 rounded-full animate-pulse", anyDown ? "bg-rose-500" : "bg-emerald-500")} />
              <span className="text-xs font-medium">{anyDown ? "Issues detected" : "All systems normal"}</span>
@@ -87,7 +92,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <Card className="flex flex-col md:flex-row gap-6 items-end">
+      <Card className="flex flex-col md:flex-row gap-6 items-stretch md:items-end">
         <div className="flex-1 space-y-2 w-full">
           <label className="text-xs font-bold uppercase tracking-wider text-muted">History window</label>
           <div className="flex gap-1 bg-[var(--secondary-bg)] p-1 rounded-lg w-fit">

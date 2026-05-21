@@ -11,6 +11,7 @@ import { ArrowLeft, Moon, Sun, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 export default function MonitorDetails({ params }: { params: Promise<{ id: string }> }) {
   const { theme, toggleTheme } = useTheme();
@@ -72,15 +73,19 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
               Back to Dashboard
             </Button>
           </Link>
-          <NotificationDropdown />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          </Button>
+          <Tooltip content="Notifications">
+            <NotificationDropdown />
+          </Tooltip>
+          <Tooltip content={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </Button>
+          </Tooltip>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--secondary-bg)]">
              <div className={cn("w-2 h-2 rounded-full", data?.latest?.ok ? "bg-emerald-500" : "bg-rose-500")} />
              <span className="text-xs font-medium">{data?.latest?.ok ? "Online" : "Loading"}</span>

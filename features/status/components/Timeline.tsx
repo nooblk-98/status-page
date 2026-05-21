@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 interface Check {
   ts: number;
@@ -16,8 +17,6 @@ interface TimelineProps {
 }
 
 export function Timeline({ checks, range }: TimelineProps) {
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: React.ReactNode } | null>(null);
-
   const buckets = useMemo(() => {
     const rangeToMs = (r: { type: string; value: number }) => {
       if (r.type === "minutes") return r.value * 60 * 1000;
@@ -75,29 +74,31 @@ export function Timeline({ checks, range }: TimelineProps) {
     <div className="space-y-2">
       <div className="flex h-6 gap-0.5">
         {buckets.map((bucket, i) => (
-          <div
+          <Tooltip
             key={i}
-            className={cn(
-              "flex-1 rounded-sm transition-colors",
-              bucket.status === "good" ? "bg-emerald-500" :
-              bucket.status === "bad" ? "bg-rose-500" :
-              "bg-gray-200 dark:bg-zinc-800"
-            )}
-            onMouseEnter={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setTooltip({
-                x: rect.left + rect.width / 2,
-                y: rect.top - 10,
-                content: (
-                  <div className="text-xs">
-                    <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
-                    <div>{formatBucketTime(bucket.start)} – {formatBucketTime(bucket.end)}</div>
-                  </div>
-                )
-              });
-            }}
-            onMouseLeave={() => setTooltip(null)}
-          />
+            content={
+              <div className="text-xs">
+                <div className="font-bold">
+                  {bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}
+                </div>
+                <div>
+                  {formatBucketTime(bucket.start)} – {formatBucketTime(bucket.end)}
+                </div>
+              </div>
+            }
+          >
+            <div
+              tabIndex={0}
+              role="img"
+              aria-label={`${bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"} segment from ${formatBucketTime(bucket.start)} to ${formatBucketTime(bucket.end)}`}
+              className={cn(
+                "flex-1 rounded-sm transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none",
+                bucket.status === "good" ? "bg-emerald-500" :
+                bucket.status === "bad" ? "bg-rose-500" :
+                "bg-gray-200 dark:bg-zinc-800"
+              )}
+            />
+          </Tooltip>
         ))}
       </div>
       <div className="flex justify-between text-[10px] uppercase tracking-wider text-gray-500">
@@ -105,14 +106,6 @@ export function Timeline({ checks, range }: TimelineProps) {
         <span>{format(now, "MMMM d, yyyy")}</span>
         <span>Now</span>
       </div>
-      {tooltip && (
-        <div
-          className="fixed z-50 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-white shadow-lg pointer-events-none"
-          style={{ left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -100%)' }}
-        >
-          {tooltip.content}
-        </div>
-      )}
     </div>
   );
 }
