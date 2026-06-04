@@ -71,6 +71,20 @@ export function Timeline({ checks, range }: TimelineProps) {
     return format(ts, "MMM d, HH:mm");
   };
 
+  const showTooltip = (el: HTMLElement, bucket: any) => {
+    const rect = el.getBoundingClientRect();
+    setTooltip({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10,
+      content: (
+        <div className="text-xs">
+          <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
+          <div>{formatBucketTime(bucket.start)} – {formatBucketTime(bucket.end)}</div>
+        </div>
+      )
+    });
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex h-6 gap-0.5">
@@ -78,25 +92,18 @@ export function Timeline({ checks, range }: TimelineProps) {
           <div
             key={i}
             className={cn(
-              "flex-1 rounded-sm transition-colors",
+              "flex-1 rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:relative z-0 focus-visible:z-10",
               bucket.status === "good" ? "bg-emerald-500" :
               bucket.status === "bad" ? "bg-rose-500" :
               "bg-gray-200 dark:bg-zinc-800"
             )}
-            onMouseEnter={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setTooltip({
-                x: rect.left + rect.width / 2,
-                y: rect.top - 10,
-                content: (
-                  <div className="text-xs">
-                    <div className="font-bold">{bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"}</div>
-                    <div>{formatBucketTime(bucket.start)} – {formatBucketTime(bucket.end)}</div>
-                  </div>
-                )
-              });
-            }}
+            tabIndex={0}
+            role="img"
+            aria-label={`${bucket.status === "good" ? "Healthy" : bucket.status === "bad" ? "Down" : "No Data"} from ${formatBucketTime(bucket.start)} to ${formatBucketTime(bucket.end)}`}
+            onMouseEnter={(e) => showTooltip(e.currentTarget, bucket)}
+            onFocus={(e) => showTooltip(e.currentTarget, bucket)}
             onMouseLeave={() => setTooltip(null)}
+            onBlur={() => setTooltip(null)}
           />
         ))}
       </div>
