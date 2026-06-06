@@ -15,6 +15,13 @@ const envSchema = z.object({
   GOOGLE_CHAT_WEBHOOK_URL: z.string().optional(),
   TEAMS_ENABLED: z.string().optional().transform((v) => v === "true").default("false"),
   TEAMS_WEBHOOK_URL: z.string().optional(),
+  TELEGRAM_ENABLED: z.string().optional().transform((v) => v === "true").default("false"),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_CHAT_ID: z.string().optional(),
+  // Admin auth (single password). Used as bootstrap fallback before a password is set in the DB.
+  ADMIN_PASSWORD: z.string().optional(),
+  // Secret used to sign session cookies. MUST be stable across restarts.
+  SESSION_SECRET: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

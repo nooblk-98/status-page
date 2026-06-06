@@ -31,6 +31,42 @@ export interface Summary {
   percent: number;
 }
 
+export type MonitorType = "http" | "tcp" | "ping";
+
+export interface MonitorRow {
+  id: string;
+  name: string;
+  type: MonitorType;
+  url: string | null;
+  host: string | null;
+  port: number | null;
+  method: string;
+  expected_status: number | null;
+  keyword: string | null;
+  interval_seconds: number;
+  timeout_ms: number;
+  enabled: number;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface NewMonitor {
+  id: string;
+  name: string;
+  type: MonitorType;
+  url?: string | null;
+  host?: string | null;
+  port?: number | null;
+  method?: string;
+  expected_status?: number | null;
+  keyword?: string | null;
+  interval_seconds: number;
+  timeout_ms: number;
+  enabled?: number;
+  sort_order?: number;
+}
+
 function run(sql: string, params: any[] = []): Promise<any> {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
@@ -71,6 +107,38 @@ export async function initDb() {
     )`
   );
   await run("CREATE INDEX IF NOT EXISTS idx_checks_site_ts ON checks(site_id, ts)");
+
+  // Monitors — DB-managed replacement for the hardcoded lib/config.ts sites.
+  // id is a TEXT slug so existing checks.site_id history stays linked.
+  await run(
+    `CREATE TABLE IF NOT EXISTS monitors (
+      id              TEXT PRIMARY KEY,
+      name            TEXT NOT NULL,
+      type            TEXT NOT NULL DEFAULT 'http',
+      url             TEXT,
+      host            TEXT,
+      port            INTEGER,
+      method          TEXT NOT NULL DEFAULT 'GET',
+      expected_status INTEGER,
+      keyword         TEXT,
+      interval_seconds INTEGER NOT NULL DEFAULT 30,
+      timeout_ms      INTEGER NOT NULL DEFAULT 8000,
+      enabled         INTEGER NOT NULL DEFAULT 1,
+      sort_order      INTEGER NOT NULL DEFAULT 0,
+      created_at      INTEGER NOT NULL,
+      updated_at      INTEGER NOT NULL
+    )`
+  );
+  await run("CREATE INDEX IF NOT EXISTS idx_monitors_sort ON monitors(sort_order, created_at)");
+
+  // Settings — key/value JSON blobs: 'branding' | 'notifications' | 'retention' | 'admin'.
+  await run(
+    `CREATE TABLE IF NOT EXISTS settings (
+      key        TEXT PRIMARY KEY,
+      value      TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    )`
+  );
 }
 
 export const dbOps = {
@@ -149,5 +217,95 @@ export const dbOps = {
     );
 
     return { summaries, latests, checks };
-  }
+  },
+
+  // --- Retention ---
+  async pruneChecks(beforeTs: number): Promise<number> {
+    const res = await run("DELETE FROM checks WHERE ts < ?", [beforeTs]);
+    return res?.changes ?? 0;
+  },
+
+  // --- Monitors ---
+  async listMonitors(opts?: { enabledOnly?: boolean }): Promise<MonitorRow[]> {
+    const where = opts?.enabledOnly ? "WHERE enabled = 1" : "";
+    return all<MonitorRow>(
+      `SELECT * FROM monitors ${where} ORDER BY sort_order, created_at`
+    );
+  },
+  async getMonitor(id: string): Promise<MonitorRow | undefined> {
+    return get<MonitorRow>("SELECT * FROM monitors WHERE id = ?", [id]);
+  },
+  async countMonitors(): Promise<number> {
+    const row = await get<{ c: number }>("SELECT COUNT(*) as c FROM monitors");
+    return row?.c ?? 0;
+  },
+  async insertMonitor(m: NewMonitor): Promise<MonitorRow> {
+    const now = Date.now();
+    await run(
+      `INSERT INTO monitors
+        (id, name, type, url, host, port, method, expected_status, keyword,
+         interval_seconds, timeout_ms, enabled, sort_order, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        m.id,
+        m.name,
+        m.type,
+        m.url ?? null,
+        m.host ?? null,
+        m.port ?? null,
+        m.method ?? "GET",
+        m.expected_status ?? null,
+        m.keyword ?? null,
+        m.interval_seconds,
+        m.timeout_ms,
+        m.enabled ?? 1,
+        m.sort_order ?? 0,
+        now,
+        now,
+      ]
+    );
+    return (await this.getMonitor(m.id))!;
+  },
+  async updateMonitor(
+    id: string,
+    patch: Partial<Omit<MonitorRow, "id" | "created_at" | "updated_at">>
+  ): Promise<MonitorRow | undefined> {
+    const fields = Object.keys(patch);
+    if (fields.length > 0) {
+      const set = fields.map((f) => `${f} = ?`).join(", ");
+      const values = fields.map((f) => (patch as any)[f]);
+      await run(`UPDATE monitors SET ${set}, updated_at = ? WHERE id = ?`, [
+        ...values,
+        Date.now(),
+        id,
+      ]);
+    }
+    return this.getMonitor(id);
+  },
+  async deleteMonitor(id: string): Promise<void> {
+    // Intentionally retains checks history so an accidental delete doesn't lose uptime data.
+    await run("DELETE FROM monitors WHERE id = ?", [id]);
+  },
+
+  // --- Settings (key/value JSON) ---
+  async getSetting<T>(key: string): Promise<T | undefined> {
+    try {
+      const row = await get<{ value: string }>(
+        "SELECT value FROM settings WHERE key = ?",
+        [key]
+      );
+      if (!row) return undefined;
+      return JSON.parse(row.value) as T;
+    } catch {
+      // Table may not exist yet (e.g. at build time before initDb) — fall back to defaults.
+      return undefined;
+    }
+  },
+  async setSetting<T>(key: string, value: T): Promise<void> {
+    await run(
+      `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+      [key, JSON.stringify(value), Date.now()]
+    );
+  },
 };

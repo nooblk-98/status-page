@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Timeline } from "@/features/status/components/Timeline";
 import Link from "next/link";
-import { Search, Moon, Sun, Activity, X } from "lucide-react";
+import { Search, Moon, Sun, Activity, X, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
@@ -16,6 +16,24 @@ interface Site {
   name: string;
   url: string;
 }
+
+interface Branding {
+  siteName: string;
+  tagline: string;
+  description: string;
+  footerText: string;
+  footerLinkText: string;
+  footerLinkUrl: string;
+}
+
+const DEFAULT_BRANDING: Branding = {
+  siteName: "Status Page",
+  tagline: "Uptime you can trust",
+  description: "Simple Modern looking Uptime Monitor.",
+  footerText: "Developed by",
+  footerLinkText: "nooblk",
+  footerLinkUrl: "https://github.com/nooblk-98",
+};
 
 interface SiteData {
   site: Site;
@@ -30,6 +48,16 @@ export default function Dashboard() {
   const [range, setRange] = useState({ type: "minutes", value: 60 });
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [branding, setBranding] = useState<Branding>(DEFAULT_BRANDING);
+
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((res) => res.json())
+      .then((d) => {
+        if (d.branding) setBranding((prev) => ({ ...prev, ...d.branding }));
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchData = useCallback(async () => {
     const days = range.type === "minutes" ? range.value / 1440 : range.type === "hours" ? range.value / 24 : range.value;
@@ -65,13 +93,18 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Activity className="text-indigo-600" />
-            <span className="font-bold text-xl">Status Page</span>
+            <span className="font-bold text-xl">{branding.siteName}</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">Uptime you can trust</h1>
-          <p className="text-muted">Simple Modern looking Uptime Monitor.</p>
+          <h1 className="text-4xl font-bold tracking-tight">{branding.tagline}</h1>
+          <p className="text-muted">{branding.description}</p>
         </div>
         <div className="flex items-center gap-3">
           <NotificationDropdown />
+          <Link href="/admin" aria-label="Admin settings">
+            <Button variant="ghost" size="sm">
+              <Settings size={16} />
+            </Button>
+          </Link>
           <Button
             variant="ghost"
             size="sm"
@@ -225,7 +258,10 @@ export default function Dashboard() {
       </div>
 
       <footer className="text-center text-sm text-muted py-8">
-        Developed by <a href="https://github.com/nooblk-98" className="font-bold hover:text-indigo-600">nooblk</a>
+        {branding.footerText}{" "}
+        <a href={branding.footerLinkUrl} className="font-bold hover:text-indigo-600">
+          {branding.footerLinkText}
+        </a>
       </footer>
     </main>
   );

@@ -1,18 +1,25 @@
 import nodemailer from "nodemailer";
-import { env } from "@/lib/env";
-import { SiteConfig } from "@/lib/config";
+import { getNotificationConfig, NotificationConfig } from "@/lib/settings";
 
-async function sendEmail(site: SiteConfig, isUp: boolean, latency: number | null, error: string | null) {
-  if (!env.EMAIL_ENABLED || !env.EMAIL_HOST || !env.EMAIL_USER || !env.EMAIL_PASS || !env.EMAIL_TO) return;
+export interface AlertTarget {
+  name: string;
+  url: string;
+}
+
+async function sendEmail(
+  cfg: NotificationConfig["email"],
+  site: AlertTarget,
+  isUp: boolean,
+  latency: number | null,
+  error: string | null
+) {
+  if (!cfg.enabled || !cfg.host || !cfg.user || !cfg.pass || !cfg.to) return;
 
   const transporter = nodemailer.createTransport({
-    host: env.EMAIL_HOST,
-    port: env.EMAIL_PORT,
-    secure: env.EMAIL_SECURE,
-    auth: {
-      user: env.EMAIL_USER,
-      pass: env.EMAIL_PASS,
-    },
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure,
+    auth: { user: cfg.user, pass: cfg.pass },
   });
 
   const subject = `[${isUp ? "RECOVERED" : "DOWN"}] ${site.name} is ${isUp ? "up" : "down"}`;
@@ -25,10 +32,10 @@ ${isUp ? `Latency: ${latency}ms` : `Error: ${error}`}
 
   try {
     const info = await transporter.sendMail({
-      from: env.EMAIL_FROM,
-      to: env.EMAIL_TO,
-      subject: subject,
-      text: text,
+      from: cfg.from,
+      to: cfg.to,
+      subject,
+      text,
     });
     console.log("Email sent: %s", info.messageId);
   } catch (err) {
@@ -36,13 +43,19 @@ ${isUp ? `Latency: ${latency}ms` : `Error: ${error}`}
   }
 }
 
-async function sendGoogleChat(site: SiteConfig, isUp: boolean, latency: number | null, error: string | null) {
-  if (!env.GOOGLE_CHAT_ENABLED || !env.GOOGLE_CHAT_WEBHOOK_URL) return;
+async function sendGoogleChat(
+  cfg: NotificationConfig["googleChat"],
+  site: AlertTarget,
+  isUp: boolean,
+  latency: number | null,
+  error: string | null
+) {
+  if (!cfg.enabled || !cfg.webhookUrl) return;
 
   const text = `*${isUp ? "RECOVERED" : "DOWN"}:* ${site.name} (${site.url})\nTime: ${new Date().toLocaleString()}\n${isUp ? `Latency: ${latency}ms` : `Error: ${error}`}`;
 
   try {
-    await fetch(env.GOOGLE_CHAT_WEBHOOK_URL, {
+    await fetch(cfg.webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
@@ -53,17 +66,17 @@ async function sendGoogleChat(site: SiteConfig, isUp: boolean, latency: number |
   }
 }
 
-async function sendTeams(site: SiteConfig, isUp: boolean, latency: number | null, error: string | null) {
-  if (!env.TEAMS_ENABLED || !env.TEAMS_WEBHOOK_URL) return;
+async function sendTeams(
+  cfg: NotificationConfig["teams"],
+  site: AlertTarget,
+  isUp: boolean,
+  latency: number | null,
+  error: string | null
+) {
+  if (!cfg.enabled || !cfg.webhookUrl) return;
 
   const color = isUp ? "00FF00" : "FF0000";
   const title = `${isUp ? "RECOVERED" : "DOWN"}: ${site.name}`;
-  const text = `
-**Site:** ${site.name} (${site.url})
-**Status:** ${isUp ? "RECOVERED" : "DOWN"}
-**Time:** ${new Date().toLocaleString()}
-${isUp ? `**Latency:** ${latency}ms` : `**Error:** ${error}`}
-  `;
 
   const card = {
     "@type": "MessageCard",
@@ -89,7 +102,7 @@ ${isUp ? `**Latency:** ${latency}ms` : `**Error:** ${error}`}
   };
 
   try {
-    await fetch(env.TEAMS_WEBHOOK_URL, {
+    await fetch(cfg.webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(card),
@@ -100,10 +113,40 @@ ${isUp ? `**Latency:** ${latency}ms` : `**Error:** ${error}`}
   }
 }
 
-export async function sendAlert(site: SiteConfig, isUp: boolean, latency: number | null, error: string | null) {
+async function sendTelegram(
+  cfg: NotificationConfig["telegram"],
+  site: AlertTarget,
+  isUp: boolean,
+  latency: number | null,
+  error: string | null
+) {
+  if (!cfg.enabled || !cfg.botToken || !cfg.chatId) return;
+
+  const text = `${isUp ? "✅ RECOVERED" : "🔴 DOWN"}: ${site.name} (${site.url})\nTime: ${new Date().toLocaleString()}\n${isUp ? `Latency: ${latency}ms` : `Error: ${error}`}`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${cfg.botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: cfg.chatId, text }),
+    });
+    console.log("Telegram alert sent");
+  } catch (err) {
+    console.error("Error sending Telegram alert:", err);
+  }
+}
+
+export async function sendAlert(
+  site: AlertTarget,
+  isUp: boolean,
+  latency: number | null,
+  error: string | null
+) {
+  const cfg = await getNotificationConfig();
   await Promise.allSettled([
-    sendEmail(site, isUp, latency, error),
-    sendGoogleChat(site, isUp, latency, error),
-    sendTeams(site, isUp, latency, error),
+    sendEmail(cfg.email, site, isUp, latency, error),
+    sendGoogleChat(cfg.googleChat, site, isUp, latency, error),
+    sendTeams(cfg.teams, site, isUp, latency, error),
+    sendTelegram(cfg.telegram, site, isUp, latency, error),
   ]);
 }
