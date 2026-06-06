@@ -18,6 +18,21 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
   const [site, setSite] = useState<any>(null);
   const [data, setData] = useState<any>(null);
   const [range, setRange] = useState({ type: "minutes", value: 60 });
+  const [branding, setBranding] = useState<any>({
+    siteName: "Status Page",
+    footerText: "Developed by",
+    footerLinkText: "nooblk",
+    footerLinkUrl: "https://github.com/nooblk-98",
+  });
+
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((res) => res.json())
+      .then((d) => {
+        if (d.branding) setBranding((prev: any) => ({ ...prev, ...d.branding }));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/sites")
@@ -59,7 +74,7 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Activity className="text-indigo-600" />
-            <span className="font-bold text-xl">Status Page</span>
+            <span className="font-bold text-xl">{branding.siteName}</span>
           </div>
           <p className="text-xs font-bold uppercase tracking-wider text-muted">Monitor Details</p>
           <h1 className="text-4xl font-bold tracking-tight">{site.name}</h1>
@@ -139,7 +154,10 @@ export default function MonitorDetails({ params }: { params: Promise<{ id: strin
       </Card>
 
       <footer className="text-center text-sm text-muted py-8">
-        Developed by <a href="https://github.com/nooblk-98" className="font-bold hover:text-indigo-600">nooblk</a>
+        {branding.footerText}{" "}
+        <a href={branding.footerLinkUrl} className="font-bold hover:text-indigo-600">
+          {branding.footerLinkText}
+        </a>
       </footer>
     </main>
   );
