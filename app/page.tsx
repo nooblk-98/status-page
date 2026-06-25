@@ -136,6 +136,7 @@ export default function Dashboard() {
                   setLoading(true);
                   setRange(r);
                 }}
+                aria-pressed={range.type === r.type && range.value === r.value}
                 className={cn(
                   "px-3 py-1 rounded-md text-sm font-medium transition-colors",
                   range.type === r.type && range.value === r.value
